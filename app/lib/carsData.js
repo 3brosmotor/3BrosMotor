@@ -10,13 +10,11 @@ export const INITIAL_60_VEHICLES = [
     chassis: 'GUN125-3940215',
     location: 'Dar es Salaam Yard',
     price: '34,500',
-    photo: 'https://picsum.photos/seed/toyota-hilux-gun125-front/800/600',
+    photo: 'https://images.unsplash.com/photo-1551830820-330a71b99659?w=800&auto=format&fit=crop&q=80',
     images: [
-      'https://picsum.photos/seed/toyota-hilux-gun125-front/800/600',
-      'https://picsum.photos/seed/toyota-hilux-gun125-side/800/600',
-      'https://picsum.photos/seed/toyota-hilux-gun125-cockpit/800/600',
-      'https://picsum.photos/seed/toyota-hilux-gun125-rear/800/600',
-      'https://picsum.photos/seed/toyota-hilux-gun125-engine/800/600'
+      'https://images.unsplash.com/photo-1551830820-330a71b99659?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&auto=format&fit=crop&q=80'
     ],
     color: 'WHITE',
     fuel: 'DIESEL',
@@ -38,13 +36,11 @@ export const INITIAL_60_VEHICLES = [
     chassis: 'GDJ150-0042189',
     location: 'Dar es Salaam Yard',
     price: '46,800',
-    photo: 'https://picsum.photos/seed/prado-txl-gdj150-front/800/600',
+    photo: 'https://res.cloudinary.com/ztiftbhu/image/upload/v1790281550/Toyota_Land_Cruiser_Prado_TX-L.jpg',
     images: [
-      'https://picsum.photos/seed/prado-txl-gdj150-front/800/600',
-      'https://picsum.photos/seed/prado-txl-gdj150-side/800/600',
-      'https://picsum.photos/seed/prado-txl-gdj150-interior/800/600',
-      'https://picsum.photos/seed/prado-txl-gdj150-seats/800/600',
-      'https://picsum.photos/seed/prado-txl-gdj150-rear/800/600'
+      'https://res.cloudinary.com/ztiftbhu/image/upload/v1790281550/Toyota_Land_Cruiser_Prado_TX-L.jpg',
+      'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&auto=format&fit=crop&q=80'
     ],
     color: 'PEARL WHITE',
     fuel: 'DIESEL',
@@ -66,13 +62,11 @@ export const INITIAL_60_VEHICLES = [
     chassis: 'URJ202-4019283',
     location: 'Dar es Salaam Yard',
     price: '68,500',
-    photo: 'https://picsum.photos/seed/land-cruiser-v8-urj202-front/800/600',
+    photo: 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&auto=format&fit=crop&q=80',
     images: [
-      'https://picsum.photos/seed/land-cruiser-v8-urj202-front/800/600',
-      'https://picsum.photos/seed/land-cruiser-v8-urj202-side/800/600',
-      'https://picsum.photos/seed/land-cruiser-v8-urj202-cockpit/800/600',
-      'https://picsum.photos/seed/land-cruiser-v8-urj202-rear/800/600',
-      'https://picsum.photos/seed/land-cruiser-v8-urj202-sunroof/800/600'
+      'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&auto=format&fit=crop&q=80'
     ],
     color: 'BLACK',
     fuel: 'PETROL',
@@ -94,12 +88,11 @@ export const INITIAL_60_VEHICLES = [
     chassis: 'ZSU60-0104821',
     location: 'Dar es Salaam Yard',
     price: '22,400',
-    photo: 'https://picsum.photos/seed/harrier-zsu60-front/800/600',
+    photo: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&auto=format&fit=crop&q=80',
     images: [
-      'https://picsum.photos/seed/harrier-zsu60-front/800/600',
-      'https://picsum.photos/seed/harrier-zsu60-side/800/600',
-      'https://picsum.photos/seed/harrier-zsu60-interior/800/600',
-      'https://picsum.photos/seed/harrier-zsu60-rear/800/600'
+      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&auto=format&fit=crop&q=80'
     ],
     color: 'WINE RED',
     fuel: 'PETROL',
@@ -121,12 +114,11 @@ export const INITIAL_60_VEHICLES = [
     chassis: 'MXAA54-2019482',
     location: 'Dar es Salaam Yard',
     price: '29,800',
-    photo: 'https://picsum.photos/seed/rav4-mxaa54-front/800/600',
+    photo: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&auto=format&fit=crop&q=80',
     images: [
-      'https://picsum.photos/seed/rav4-mxaa54-front/800/600',
-      'https://picsum.photos/seed/rav4-mxaa54-side/800/600',
-      'https://picsum.photos/seed/rav4-mxaa54-interior/800/600',
-      'https://picsum.photos/seed/rav4-mxaa54-rear/800/600'
+      'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&auto=format&fit=crop&q=80'
     ],
     color: 'GREY',
     fuel: 'PETROL',

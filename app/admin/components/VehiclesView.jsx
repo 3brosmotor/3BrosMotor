@@ -16,9 +16,17 @@ import {
   Table as TableIcon,
   X,
   Gauge,
-  Fuel
+  Fuel,
+  CloudUpload,
+  FileUp,
+  FileDown,
+  AlertTriangle,
+  CheckCircle2,
+  HelpCircle,
+  RefreshCw
 } from 'lucide-react';
 import MultiPhotoUpload from './MultiPhotoUpload';
+import { syncAllCarsToFirestore, testFirestoreConnection, importFleetJSON } from '../../lib/carStore';
 
 export default function VehiclesView({ 
   cars = [], 
@@ -32,6 +40,9 @@ export default function VehiclesView({
   const [selectedLocation, setSelectedLocation] = useState('ALL');
   const [viewMode, setViewMode] = useState('auto'); // 'auto' | 'cards' | 'table'
   const [editingCar, setEditingCar] = useState(null);
+  const [syncStatus, setSyncStatus] = useState(null); // { type: 'success' | 'warning' | 'error', message: string, details?: string }
+  const [isSyncing, setIsSyncing] = useState(false);
+  const jsonFileInputRef = useState(null)[0];
 
   // Filter cars
   const filteredCars = cars.filter(car => {
@@ -91,8 +102,102 @@ export default function VehiclesView({
     document.body.removeChild(link);
   };
 
+  const handleExportJSON = () => {
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(cars, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', `3bros_inventory_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handleImportJSONFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const res = importFleetJSON(event.target.result);
+      if (res.success) {
+        setSyncStatus({
+          type: 'success',
+          message: `Successfully imported ${res.count} vehicles with Cloudinary photos! Data is now saved and active.`
+        });
+      } else {
+        setSyncStatus({
+          type: 'error',
+          message: res.error || 'Failed to parse JSON file'
+        });
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleSyncToCloud = async () => {
+    setIsSyncing(true);
+    setSyncStatus(null);
+    const conn = await testFirestoreConnection();
+    if (conn.status === 'permission-denied') {
+      setIsSyncing(false);
+      setSyncStatus({
+        type: 'warning',
+        message: 'Firebase Database Rules are currently locked in Firebase Console.',
+        details: 'Go to console.firebase.google.com -> Firestore Database -> Rules -> allow read, write: if true; and click Publish.'
+      });
+      return;
+    }
+
+    const res = await syncAllCarsToFirestore(cars);
+    setIsSyncing(false);
+    if (res.success) {
+      setSyncStatus({
+        type: 'success',
+        message: `Synced ${res.count} vehicles with all photos to Firebase Cloud! Live for every visitor on Vercel.`
+      });
+    } else {
+      setSyncStatus({
+        type: res.isPermissionDenied ? 'warning' : 'error',
+        message: res.error || 'Sync failed',
+        details: res.isPermissionDenied ? 'Please publish read/write rules in Firebase Console.' : undefined
+      });
+    }
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Cloud Sync Diagnostic Banner */}
+      {syncStatus && (
+        <div className={`p-4 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${
+          syncStatus.type === 'success'
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+            : syncStatus.type === 'warning'
+            ? 'bg-amber-50 border-amber-300 text-amber-900'
+            : 'bg-red-50 border-red-300 text-red-900'
+        }`}>
+          <div className="flex items-start gap-2.5">
+            {syncStatus.type === 'success' ? (
+              <CheckCircle2 size={18} className="text-emerald-600 flex-shrink-0 mt-0.5" />
+            ) : (
+              <AlertTriangle size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
+            )}
+            <div>
+              <div className="font-bold">{syncStatus.message}</div>
+              {syncStatus.details && (
+                <div className="text-[11px] opacity-90 mt-0.5 font-mono">{syncStatus.details}</div>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSyncStatus(null)}
+            className="self-end sm:self-auto text-xs font-semibold px-2 py-1 rounded bg-white/70 hover:bg-white text-gray-700 transition"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-gray-200">
         <div>
@@ -109,6 +214,18 @@ export default function VehiclesView({
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          {/* Cloud Database Sync Button */}
+          <button
+            type="button"
+            onClick={handleSyncToCloud}
+            disabled={isSyncing}
+            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+            title="Push all vehicles and Cloudinary photos to Firebase Cloud Database so everyone sees them on Vercel"
+          >
+            <CloudUpload size={14} className={isSyncing ? 'animate-spin' : ''} />
+            <span>{isSyncing ? 'Syncing...' : 'Sync to Cloud'}</span>
+          </button>
+
           <button
             type="button"
             onClick={onAddNew}
@@ -118,10 +235,35 @@ export default function VehiclesView({
             <span>Add Vehicle</span>
           </button>
 
+          {/* Export JSON Button */}
+          <button
+            type="button"
+            onClick={handleExportJSON}
+            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 text-xs font-bold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+            title="Backup current fleet data with Cloudinary URLs to a JSON file"
+          >
+            <FileDown size={14} />
+            <span className="hidden sm:inline">Backup JSON</span>
+            <span className="sm:hidden">JSON</span>
+          </button>
+
+          {/* Import JSON Button */}
+          <label className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 text-xs font-bold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer m-0">
+            <FileUp size={14} />
+            <span className="hidden sm:inline">Import JSON</span>
+            <span className="sm:hidden">Import</span>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportJSONFile}
+              className="hidden"
+            />
+          </label>
+
           <button
             type="button"
             onClick={handleExportCSV}
-            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 text-xs font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 text-xs font-bold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer"
           >
             <Download size={14} />
             <span className="hidden sm:inline">Export CSV</span>

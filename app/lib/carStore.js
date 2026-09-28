@@ -3,7 +3,7 @@
 
 import { INITIAL_60_VEHICLES } from './carsData';
 import { db, handleFirestoreError, OperationType } from './firebase';
-import { collection, doc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, getDocs, onSnapshot } from 'firebase/firestore';
 
 // 5 initial demo vehicles for preview until user inputs their own real fleet data
 export const DEMO_CARS = INITIAL_60_VEHICLES.slice(0, 5);
@@ -247,3 +247,80 @@ export function resetToDemo() {
 
 // Backward compatibility alias
 export const resetToFull60Fleet = resetToDemo;
+
+/**
+ * Diagnostic function to test if Firestore reads/writes are allowed or permission-denied
+ */
+export async function testFirestoreConnection() {
+  if (!db) {
+    return { status: 'error', error: 'Firestore client not initialized' };
+  }
+  try {
+    const colRef = collection(db, 'vehicles');
+    const snap = await getDocs(colRef);
+    return { status: 'connected', count: snap.size, error: null };
+  } catch (err) {
+    const msg = err?.message || String(err || '');
+    const isPerm = err?.code === 'permission-denied' || msg.includes('permission');
+    return {
+      status: isPerm ? 'permission-denied' : 'error',
+      error: msg,
+      code: err?.code
+    };
+  }
+}
+
+/**
+ * Push all active vehicles to Firestore so that every visitor across the world sees them
+ */
+export async function syncAllCarsToFirestore(fleet) {
+  if (!db) {
+    return { success: false, count: 0, error: 'Firebase is not initialized' };
+  }
+  const targetFleet = Array.isArray(fleet) && fleet.length > 0 ? fleet : getStoredCars();
+  let successCount = 0;
+  let lastErr = null;
+
+  for (const car of targetFleet) {
+    try {
+      await setDoc(doc(db, 'vehicles', String(car.id)), car, { merge: true });
+      successCount++;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  if (lastErr && successCount === 0) {
+    const msg = lastErr?.message || String(lastErr || '');
+    const isPerm = lastErr?.code === 'permission-denied' || msg.includes('permission');
+    return {
+      success: false,
+      count: 0,
+      isPermissionDenied: isPerm,
+      error: isPerm
+        ? 'Permission denied: Please enable read/write rules in Firebase Console'
+        : msg
+    };
+  }
+
+  return { success: true, count: successCount, total: targetFleet.length };
+}
+
+/**
+ * Import a full fleet array from JSON and sync to both localStorage and Firestore
+ */
+export function importFleetJSON(jsonStringOrArray) {
+  try {
+    const parsed = typeof jsonStringOrArray === 'string' ? JSON.parse(jsonStringOrArray) : jsonStringOrArray;
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return { success: false, error: 'Data must be a non-empty array of vehicle objects' };
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    window.dispatchEvent(new Event(INVENTORY_EVENT));
+    // Trigger async sync to cloud
+    syncAllCarsToFirestore(parsed).catch(() => {});
+    return { success: true, count: parsed.length };
+  } catch (err) {
+    return { success: false, error: err.message || 'Failed to parse JSON file' };
+  }
+}
