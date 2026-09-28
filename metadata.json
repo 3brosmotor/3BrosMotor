@@ -1,0 +1,8 @@
+{
+  "name": "3BrosMotor",
+  "description": "3BrosMotor - Quality Cars • Better Journeys. Premier car dealership in Mwanza & Dar es Salaam, Tanzania. Premium Japanese imports, Toyota Land Cruiser, Prado, Hilux, Harrier, commercial trucks & genuine spares.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

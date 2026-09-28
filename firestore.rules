@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    // Public read for vehicles so customers anywhere in the world can browse stock
+    match /vehicles/{vehicleId} {
+      allow read: if isValidId(vehicleId);
+      allow write: if isValidId(vehicleId);
+    }
+
+    // Public read for dealership settings & director profile photo
+    match /dealership_settings/{docId} {
+      allow read: if isValidId(docId);
+      allow write: if isValidId(docId);
+    }
+
+    // Expenses ledger
+    match /expenses/{expenseId} {
+      allow read, write: if isValidId(expenseId);
+    }
+
+    // Sales ledger
+    match /sales/{saleId} {
+      allow read, write: if isValidId(saleId);
+    }
+
+    // Calendar events, reminders, notes
+    match /calendar_events/{eventId} {
+      allow read, write: if isValidId(eventId);
+    }
+
+    match /reminders/{reminderId} {
+      allow read, write: if isValidId(reminderId);
+    }
+
+    match /notes/{noteId} {
+      allow read, write: if isValidId(noteId);
+    }
+
+    // Default catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

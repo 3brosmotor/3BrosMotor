@@ -1,0 +1,95 @@
+{
+  "entities": {
+    "dealership_settings": {
+      "title": "DealershipSettings",
+      "description": "Dealership configuration and director profile info",
+      "type": "object",
+      "properties": {
+        "directorName": { "type": "string" },
+        "dealershipName": { "type": "string" },
+        "primaryLocation": { "type": "string" },
+        "portOffice": { "type": "string" },
+        "tzsRate": { "type": "string" },
+        "autoNotifyWhatsApp": { "type": "boolean" },
+        "adminAvatar": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "vehicles": {
+      "title": "Vehicle",
+      "description": "Stock inventory vehicles of 3B Motors",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "make": { "type": "string" },
+        "model": { "type": "string" },
+        "year": { "type": "number" },
+        "price": { "type": "number" },
+        "mileage": { "type": "number" },
+        "fuel": { "type": "string" },
+        "transmission": { "type": "string" },
+        "body": { "type": "string" },
+        "drive": { "type": "string" },
+        "color": { "type": "string" },
+        "engine": { "type": "string" },
+        "chassis": { "type": "string" },
+        "condition": { "type": "string" },
+        "status": { "type": "string" },
+        "location": { "type": "string" },
+        "features": { "type": "array" },
+        "images": { "type": "array" },
+        "mainImage": { "type": "string" },
+        "isTopDeal": { "type": "boolean" },
+        "isSpecialOffer": { "type": "boolean" },
+        "isPopular": { "type": "boolean" }
+      },
+      "required": ["id", "title", "make", "price"]
+    },
+    "expenses": {
+      "title": "Expense",
+      "description": "Dealership operational and vehicle preparation expenses",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "date": { "type": "string" }
+      },
+      "required": ["id", "title", "amount"]
+    },
+    "sales": {
+      "title": "Sale",
+      "description": "Sold vehicle records and receipts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vehicleId": { "type": "string" },
+        "vehicleName": { "type": "string" },
+        "buyerName": { "type": "string" },
+        "salePrice": { "type": "number" }
+      },
+      "required": ["id", "vehicleName", "salePrice"]
+    }
+  },
+  "firestore": {
+    "/dealership_settings/{docId}": {
+      "schema": "dealership_settings",
+      "description": "Dealership public settings and director profile"
+    },
+    "/vehicles/{vehicleId}": {
+      "schema": "vehicles",
+      "description": "Vehicles inventory collection visible to all public visitors"
+    },
+    "/expenses/{expenseId}": {
+      "schema": "expenses",
+      "description": "Dealership expenses logs"
+    },
+    "/sales/{saleId}": {
+      "schema": "sales",
+      "description": "Sold vehicles ledger"
+    }
+  }
+}
