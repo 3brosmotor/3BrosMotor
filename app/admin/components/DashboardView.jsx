@@ -74,7 +74,7 @@ export default function DashboardView({
                 {latestArrivals.map((car) => (
                   <tr key={car.id} className="hover:bg-gray-50/80 transition">
                     <td className="py-2.5 px-3 flex items-center gap-2.5">
-                      <div className="w-10 h-7 rounded overflow-hidden relative bg-gray-100 flex-shrink-0 border border-gray-200">
+                      <div className="w-10 h-7 rounded overflow-hidden relative bg-gray-100 shrink-0 border border-gray-200">
                         <Image 
                           src={car.photo} 
                           alt={car.model} 

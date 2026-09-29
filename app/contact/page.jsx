@@ -109,7 +109,7 @@ export default function ContactPage() {
       <div>
         {/* Top Black Bar with Dual Contact Numbers */}
         <div id="top-bar" className="bg-black text-white py-1.5 border-b border-gray-800">
-          <div className="container mx-auto max-w-[1240px] px-3 flex flex-wrap justify-between items-center text-xs font-bold gap-2">
+          <div className="container mx-auto max-w-310 px-3 flex flex-wrap justify-between items-center text-xs font-bold gap-2">
             <div className="flex flex-wrap items-center gap-3 sm:gap-5">
               {/* Phone Line 1 */}
               <div className="flex items-center gap-1.5">
@@ -152,7 +152,7 @@ export default function ContactPage() {
 
         {/* Main Header (Dealership Blue #4b6ba3) */}
         <header id="main-header" className="bg-[#4b6ba3] py-2 sm:py-3 border-b-2 border-[#3c5683] shadow-md">
-          <div className="container mx-auto max-w-[1240px] px-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="container mx-auto max-w-310 px-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <Link 
               href="/" 
               onClick={handleLogoClick}
@@ -181,7 +181,7 @@ export default function ContactPage() {
 
         {/* Breadcrumb Header Banner */}
         <div className="bg-[#1f2837] text-white py-4 border-b border-gray-700">
-          <div className="container mx-auto max-w-[1240px] px-3">
+          <div className="container mx-auto max-w-310 px-3">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
               <div>
                 <h1 className="text-xl sm:text-2xl font-black tracking-wide text-white uppercase flex items-center gap-2">
@@ -205,7 +205,7 @@ export default function ContactPage() {
         </div>
 
         {/* Main Content Area */}
-        <main className="container mx-auto max-w-[1240px] px-3 py-6">
+        <main className="container mx-auto max-w-310 px-3 py-6">
           
           {/* Dual Phone Numbers Cards (Call & WhatsApp) */}
           <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">

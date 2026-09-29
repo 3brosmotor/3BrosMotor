@@ -290,7 +290,7 @@ export default function Home() {
                 <span>Contact Us</span>
               </Link>
 
-              {/* Official 3BrosMotor Social Accounts (Instagram, Facebook, LinkedIn, TikTok) */}
+              {/* Official 3BrosMotor Social Acc (Instagram, Facebook, LinkedIn, TikTok) */}
               <SocialIcons variant="header" />
             </div>
           </div>

@@ -64,7 +64,7 @@ export default function DealershipSeoSection() {
     <section 
       id="dealership-authority-seo" 
       aria-label="Dealership Information & FAQ"
-      className="container mx-auto max-w-[1240px] px-3 my-10"
+      className="container mx-auto max-w-310 px-3 my-10"
     >
       {/* 4 Pillars of Excellence */}
       <div className="bg-gradient-to-r from-[#213555] via-[#4b6ba3] to-[#213555] text-white p-6 sm:p-8 rounded-lg shadow-md mb-8">

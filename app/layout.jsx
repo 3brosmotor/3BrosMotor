@@ -227,44 +227,40 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Schema.org Structured Data */}
+        {/* Early Abort / Network / Signal cancellation silencer */}
         <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(dealershipSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
-
-        {/* Global Error Handler Script */}
-        <script
+          id="abort-error-silencer"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                function isIgnorable(e) {
-                  if (!e) return false;
-                  var msg = (e.message || String(e)).toLowerCase();
-                  var name = (e.name || '').toLowerCase();
-                  return name === 'aborterror' || e.code === 20 || e.code === 'permission-denied' ||
-                    msg.indexOf('abort') !== -1 || msg.indexOf('the user aborted a request') !== -1 ||
-                    msg.indexOf('insufficient permissions') !== -1 || msg.indexOf('missing or insufficient permissions') !== -1;
+                function shouldSilence(err) {
+                  if (!err) return false;
+                  var name = (err.name || '').toLowerCase();
+                  var msg = (err.message || String(err)).toLowerCase();
+                  var stack = (err.stack || '').toLowerCase();
+                  return name === 'aborterror' ||
+                    err.code === 20 ||
+                    err.code === 'permission-denied' ||
+                    err.code === 'unavailable' ||
+                    msg.indexOf('abort') !== -1 ||
+                    msg.indexOf('aborted') !== -1 ||
+                    msg.indexOf('signal is aborted') !== -1 ||
+                    msg.indexOf('the user aborted a request') !== -1 ||
+                    msg.indexOf('failed to fetch') !== -1 ||
+                    stack.indexOf('aborterror') !== -1 ||
+                    stack.indexOf('signal is aborted') !== -1;
                 }
-                window.addEventListener('unhandledrejection', function(event) {
-                  if (isIgnorable(event.reason)) {
-                    event.preventDefault();
-                    event.stopImmediatePropagation();
+                window.addEventListener('unhandledrejection', function(e) {
+                  if (shouldSilence(e.reason)) {
+                    e.preventDefault();
+                    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
                     return false;
                   }
                 }, true);
-                window.addEventListener('error', function(event) {
-                  if (isIgnorable(event.error) || isIgnorable(event.message)) {
-                    event.preventDefault();
-                    event.stopImmediatePropagation();
+                window.addEventListener('error', function(e) {
+                  if (shouldSilence(e.error) || shouldSilence(e.message)) {
+                    e.preventDefault();
+                    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
                     return false;
                   }
                 }, true);
@@ -274,6 +270,24 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={`${inter.className} bg-white antialiased`} suppressHydrationWarning>
+
+        {/* Schema.org Structured Data */}
+        <script
+          id="schema-dealership"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(dealershipSchema) }}
+        />
+        <script
+          id="schema-website"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        <script
+          id="schema-faq"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+
         <ClientErrorHandler />
         {children}
       </body>

@@ -1,5 +1,5 @@
 /**
- * Dealership Contact Configuration
+ * Dealership Contact Config
  * Centralized contact lines, WhatsApp handlers, and business location information
  */
 
