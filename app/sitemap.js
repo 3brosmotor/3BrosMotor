@@ -27,7 +27,7 @@ export default function sitemap() {
   ];
 
   // Dynamic vehicle deep-links (indexed for Google rich results)
-  const vehicleRoutes = (INITIAL_60_VEHICLES || []).slice(0, 30).map((car) => ({
+  const vehicleRoutes = (INITIAL_60_VEHICLES || []).map((car) => ({
     url: `${baseUrl}/?stock=${car.id}`,
     lastModified: currentDate,
     changeFrequency: 'weekly',
