@@ -218,15 +218,14 @@ export default function Home() {
         {/* Top Black Bar with Dual Contact Lines */}
         <div id="top-bar" className="bg-black text-white py-1.5 border-b border-gray-800 text-xs">
           <div className="container mx-auto max-w-[1240px] px-3 flex flex-wrap justify-between items-center gap-2 font-bold tracking-wide">
-            {/* Dual Contact Lines */}
+            {/* Single Unified Contact Line */}
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 text-[11px] sm:text-xs">
-              {/* Phone Line 1 */}
               <div className="flex items-center gap-1.5">
                 <a 
                   id="link-topbar-call-primary"
                   href={PRIMARY_PHONE.tel} 
                   className="text-white hover:text-yellow-300 transition-colors flex items-center gap-1"
-                  title="Call +255 787 222 222"
+                  title="Call +255 693 100 680"
                 >
                   <Phone size={12} className="text-yellow-400" />
                   <span>{PRIMARY_PHONE.display}</span>
@@ -234,31 +233,6 @@ export default function Home() {
                 <a 
                   id="link-topbar-wa-primary"
                   href={PRIMARY_PHONE.whatsappUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-emerald-400 hover:text-emerald-300 transition-colors ml-0.5"
-                  title="WhatsApp +255 787 222 222"
-                >
-                  <MessageSquare size={13} />
-                </a>
-              </div>
-
-              <span className="text-gray-600 hidden sm:inline">|</span>
-
-              {/* Phone Line 2 */}
-              <div className="flex items-center gap-1.5">
-                <a 
-                  id="link-topbar-call-secondary"
-                  href={SECONDARY_PHONE.tel} 
-                  className="text-white hover:text-yellow-300 transition-colors flex items-center gap-1"
-                  title="Call +255 693 100 680"
-                >
-                  <Phone size={12} className="text-yellow-400" />
-                  <span>{SECONDARY_PHONE.display}</span>
-                </a>
-                <a 
-                  id="link-topbar-wa-secondary"
-                  href={SECONDARY_PHONE.whatsappUrl} 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="text-emerald-400 hover:text-emerald-300 transition-colors ml-0.5"
@@ -752,7 +726,7 @@ export default function Home() {
                         <div><span className="font-semibold text-gray-500">Chassis:</span><br/>{car.chassis}</div>
                         <div><span className="font-semibold text-gray-500">Mileage:</span><br/>{car.mileage}</div>
                         <div><span className="font-semibold text-gray-500">Color:</span><br/><span className="text-red-600 font-bold">{car.color}</span></div>
-                        <div><span className="font-semibold text-gray-500">Price:</span><br/><span className="text-blue-700 font-bold">{car.price ? `$${car.price}` : 'ASK'}</span></div>
+                        <div><span className="font-semibold text-gray-500">Status:</span><br/><span className="text-emerald-700 font-bold">{car.status || 'In Stock'}</span></div>
                       </div>
                     </div>
                     
@@ -807,13 +781,13 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* 3. Price / WhatsApp Button matching screenshot! */}
+                    {/* 3. Inquire / WhatsApp Button */}
                     <div className="w-20 border-r border-gray-300 flex flex-col items-center justify-center p-2">
                       <button
                         id={`btn-whatsapp-${car.id}`}
                         type="button"
                         onClick={() => whatsappInquire(car)}
-                        title="Inquire Price on WhatsApp"
+                        title="Inquire on WhatsApp"
                         className="w-10 h-10 rounded-full bg-[#25D366] hover:bg-[#20bd5a] flex items-center justify-center text-white shadow-md hover:scale-110 transition-all cursor-pointer group"
                       >
                         {/* WhatsApp SVG Icon */}
@@ -821,8 +795,8 @@ export default function Home() {
                           <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
                         </svg>
                       </button>
-                      <div className="text-[10px] text-gray-500 font-bold mt-1 text-center">
-                        {car.price ? `$${car.price}` : 'ASK'}
+                      <div className="text-[10px] text-emerald-600 font-bold mt-1 text-center">
+                        INQUIRE
                       </div>
                     </div>
 
@@ -971,12 +945,7 @@ export default function Home() {
                 <span className="flex items-center gap-1">
                   <span className="text-gray-400">Tel:</span>
                   <a href={PRIMARY_PHONE.tel} className="hover:underline text-white font-medium">{PRIMARY_PHONE.display}</a>
-                  <a href={PRIMARY_PHONE.whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300" title="WhatsApp +255 787 222 222">💬</a>
-                </span>
-                <span className="text-gray-600 hidden sm:inline">•</span>
-                <span className="flex items-center gap-1">
-                  <a href={SECONDARY_PHONE.tel} className="hover:underline text-white font-medium">{SECONDARY_PHONE.display}</a>
-                  <a href={SECONDARY_PHONE.whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300" title="WhatsApp +255 693 100 680">💬</a>
+                  <a href={PRIMARY_PHONE.whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300" title="WhatsApp +255 693 100 680">💬</a>
                 </span>
               </div>
             </div>

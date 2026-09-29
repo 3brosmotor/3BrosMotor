@@ -59,7 +59,7 @@ export default function DashboardView({
           </div>
 
           <div className="overflow-x-auto -mx-3.5 sm:mx-0 px-3.5 sm:px-0">
-            <table className="w-full text-left text-xs min-w-[540px]">
+            <table className="w-full text-left text-xs min-w-135">
               <thead>
                 <tr className="bg-gray-50 text-gray-500 uppercase font-bold text-[10px] tracking-wider border-b border-gray-200">
                   <th className="py-2.5 px-3">Vehicle</th>

@@ -7,10 +7,10 @@ export const PRIMARY_PHONE = {
   id: 'phone1',
   label: 'Phone Line 1',
   badge: '',
-  display: '+255 787 222 222',
-  clean: '255787222222',
-  tel: 'tel:+255787222222',
-  whatsappUrl: 'https://wa.me/255787222222',
+  display: '+255 693 100 680',
+  clean: '255693100680',
+  tel: 'tel:+255693100680',
+  whatsappUrl: 'https://wa.me/255693100680',
 };
 
 export const SECONDARY_PHONE = {
@@ -91,11 +91,10 @@ export function buildVehicleInquiryMessage(car) {
     `• *Stock #:* ${car.id || 'N/A'}`,
     `• *Vehicle:* ${car.year} ${car.make} ${car.model}`,
     `• *Chassis:* ${car.chassis || 'N/A'}`,
-    `• *Price:* ${car.price ? `$${car.price}` : 'Price on Request'}`,
     `• *Engine / Fuel:* ${car.engine || ''} • ${car.fuel || ''}`,
-    `• *Location:* ${car.location || 'Mwanza'}`,
+    `• *Location:* ${car.location || 'Dar es Salaam'}`,
     `----------------------------------------`,
-    `Hello 3BrosMotor, I am interested in this vehicle. Is it still available and what is your best price?`
+    `Hello 3BrosMotor, I am interested in this vehicle. Is it still available and can you share more details?`
   ].join('\n');
 }
 

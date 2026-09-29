@@ -28,7 +28,7 @@ const FAQS = [
   },
   {
     q: 'How do I import a vehicle from Japan through 3BrosMotor?',
-    a: 'Simply contact our sales team via WhatsApp (+255 787 222 222 or +255 693 100 680) with your vehicle preferences. We bid directly on your chosen vehicle at Japanese USS auctions, oversee maritime shipping to Dar es Salaam, process TRA customs clearance, and deliver the vehicle road-ready.'
+    a: 'Simply contact our sales team via WhatsApp (+255 693 100 680) with your vehicle preferences. We bid directly on your chosen vehicle at Japanese USS auctions, oversee maritime shipping to Dar es Salaam, process TRA customs clearance, and deliver the vehicle road-ready.'
   },
   {
     q: 'What payment methods does 3BrosMotor accept?',

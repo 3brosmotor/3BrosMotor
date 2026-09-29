@@ -78,10 +78,9 @@ export default function VehicleDetailModal({ car, onClose, onOpenInquiry }) {
       `• Stock ID: #${car.id}`,
       `• Chassis No: ${car.chassis || 'N/A'}`,
       `• Mileage: ${car.mileage || 'N/A'}`,
-      `• Listed Price: $${car.price || 'Ask'}`,
       `• Location: ${car.location || 'Dar es Salaam, Tanzania'}`,
       ``,
-      `Please share additional photos, a walkaround video, and discuss the final on-the-road price.`
+      `Please share additional photos, a walkaround video, and vehicle details.`
     ];
     const text = lines.join('\n');
     const url = buildWhatsAppLink(phoneObj.clean, text);
@@ -106,9 +105,6 @@ export default function VehicleDetailModal({ car, onClose, onOpenInquiry }) {
         .map(f => f.trim())
         .filter(f => f.length > 2)
     : [];
-
-  const rawPriceNum = car.price ? parseInt(String(car.price).replace(/\D/g, ''), 10) : 0;
-  const tzsEquivalent = rawPriceNum > 0 ? (rawPriceNum * 2650).toLocaleString() : null;
 
   return (
     <div 
@@ -255,27 +251,41 @@ export default function VehicleDetailModal({ car, onClose, onOpenInquiry }) {
               )}
             </div>
 
-            {/* Right 5 Cols: Pricing & Direct WhatsApp Contact Card */}
+            {/* Right 5 Cols: Direct WhatsApp Contact Card */}
             <div className="lg:col-span-5 space-y-4">
               
-              {/* Pricing Box */}
-              <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-4 sm:p-5">
-                <div className="text-[11px] font-bold text-blue-900 uppercase tracking-wider mb-1">
-                  Asking Dealership Price
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl sm:text-3xl font-black text-gray-900">
-                    {car.price ? `$${car.price}` : 'Price on Request'}
-                  </span>
-                  <span className="text-xs font-bold text-gray-500">USD</span>
-                </div>
-                {tzsEquivalent && (
-                  <div className="text-xs font-bold text-blue-700 mt-1 flex items-center gap-1">
-                    <span>≈ TZS {tzsEquivalent}</span>
-                    <span className="text-[10px] text-gray-500 font-normal">(Exchange rate applied)</span>
+              {/* Direct WhatsApp Action Box */}
+              <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3.5 shadow-sm">
+                <div>
+                  <div className="text-xs font-bold text-gray-900 uppercase tracking-wide">
+                    Contact Sales for Walkaround & Details
                   </div>
-                )}
-                <div className="mt-3 pt-3 border-t border-blue-200/80 text-[11px] text-gray-600 space-y-1">
+                  <div className="text-[11px] text-gray-500 mt-0.5">
+                    Direct communication with 3BrosMotor showroom staff
+                  </div>
+                </div>
+
+                {/* Primary WhatsApp Sales Line */}
+                <button
+                  id="btn-detail-wa-primary"
+                  type="button"
+                  onClick={() => handleWhatsApp(PRIMARY_PHONE)}
+                  className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-black py-3 px-3 rounded-lg text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99] cursor-pointer"
+                >
+                  <MessageSquare size={18} />
+                  <span>WhatsApp {PRIMARY_PHONE.display}</span>
+                </button>
+
+                {/* Direct Phone Call */}
+                <a
+                  href={PRIMARY_PHONE.tel}
+                  className="w-full bg-[#4b6ba3] hover:bg-blue-800 text-white font-bold py-2.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-[0.99] text-center"
+                >
+                  <Phone size={15} />
+                  <span>Call {PRIMARY_PHONE.display}</span>
+                </a>
+
+                <div className="pt-3 border-t border-gray-100 text-[11px] text-gray-600 space-y-1.5">
                   <div className="flex items-center gap-1.5">
                     <ShieldCheck size={14} className="text-emerald-600 flex-shrink-0" />
                     <span>Verified Importation & Title Clearance</span>
@@ -284,53 +294,6 @@ export default function VehicleDetailModal({ car, onClose, onOpenInquiry }) {
                     <CheckCircle2 size={14} className="text-emerald-600 flex-shrink-0" />
                     <span>Inspection report available at yard</span>
                   </div>
-                </div>
-              </div>
-
-              {/* Direct WhatsApp Action Box */}
-              <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-2.5 shadow-xs">
-                <div className="text-xs font-bold text-gray-900 uppercase tracking-wide">
-                  Contact Sales for Video & Price:
-                </div>
-
-                {/* Primary WhatsApp Sales Line */}
-                <button
-                  id="btn-detail-wa-primary"
-                  type="button"
-                  onClick={() => handleWhatsApp(PRIMARY_PHONE)}
-                  className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-black py-2.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99] cursor-pointer"
-                >
-                  <MessageSquare size={16} />
-                  <span>WhatsApp {PRIMARY_PHONE.display}</span>
-                </button>
-
-                {/* Secondary WhatsApp Line */}
-                <button
-                  id="btn-detail-wa-secondary"
-                  type="button"
-                  onClick={() => handleWhatsApp(SECONDARY_PHONE)}
-                  className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-black py-2.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99] cursor-pointer"
-                >
-                  <MessageSquare size={16} />
-                  <span>WhatsApp {SECONDARY_PHONE.display}</span>
-                </button>
-
-                {/* Direct Phone Call */}
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <a
-                    href={PRIMARY_PHONE.tel}
-                    className="border border-gray-300 hover:bg-gray-50 text-gray-800 font-bold py-2 px-2 rounded-lg text-xs flex items-center justify-center gap-1.5 transition text-center"
-                  >
-                    <Phone size={13} className="text-[#4b6ba3]" />
-                    <span className="truncate">Call Line 1</span>
-                  </a>
-                  <a
-                    href={SECONDARY_PHONE.tel}
-                    className="border border-gray-300 hover:bg-gray-50 text-gray-800 font-bold py-2 px-2 rounded-lg text-xs flex items-center justify-center gap-1.5 transition text-center"
-                  >
-                    <Phone size={13} className="text-[#4b6ba3]" />
-                    <span className="truncate">Call Line 2</span>
-                  </a>
                 </div>
               </div>
 

@@ -79,7 +79,7 @@ export default function VehicleInquiryModal({ car, onClose }) {
           </div>
           <div className="flex-1 text-xs">
             <div className="font-bold text-gray-900 text-sm">
-              Price: <span className="text-red-600">{car.price ? `$${car.price}` : 'Price on Request'}</span>
+              <span className="text-gray-900">{car.year} {car.make} {car.model}</span>
             </div>
             <div className="text-gray-600 mt-0.5">
               Chassis: <span className="font-mono font-semibold">{car.chassis || 'N/A'}</span>
@@ -90,13 +90,13 @@ export default function VehicleInquiryModal({ car, onClose }) {
           </div>
         </div>
 
-        {/* Dual Phone Numbers Contact Choices */}
+        {/* Contact Sales Team */}
         <div className="p-4 sm:p-5 space-y-3.5">
           <div className="text-xs font-bold text-gray-700 uppercase tracking-wide">
-            Select a number to contact our sales team:
+            Contact our sales team directly:
           </div>
 
-          {/* Number 1 */}
+          {/* Primary Line */}
           <div className="border border-gray-300 bg-gray-50/70 rounded-lg p-3 hover:border-gray-400 transition">
             <div className="flex justify-between items-center mb-2">
               <div className="flex items-center gap-2">
@@ -114,7 +114,7 @@ export default function VehicleInquiryModal({ car, onClose }) {
                 id="btn-modal-wa-primary"
                 type="button"
                 onClick={() => handleWhatsApp(PRIMARY_PHONE.clean)}
-                className="bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-2 px-2.5 rounded text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-[0.98]"
+                className="bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-2 px-2.5 rounded text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-[0.98] cursor-pointer"
               >
                 <MessageSquare size={15} />
                 <span>WhatsApp</span>
@@ -122,40 +122,6 @@ export default function VehicleInquiryModal({ car, onClose }) {
               <a
                 id="btn-modal-call-primary"
                 href={PRIMARY_PHONE.tel}
-                className="bg-[#4b6ba3] hover:bg-blue-800 text-white font-bold py-2 px-2.5 rounded text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-[0.98]"
-              >
-                <Phone size={15} />
-                <span>Call Now</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Number 2 */}
-          <div className="border border-gray-300 bg-gray-50/70 rounded-lg p-3 hover:border-gray-400 transition">
-            <div className="flex justify-between items-center mb-2">
-              <div className="flex items-center gap-2">
-                <span className="font-mono font-black text-gray-900 text-sm sm:text-base">
-                  {SECONDARY_PHONE.display}
-                </span>
-              </div>
-              <span className="text-[11px] text-gray-500 font-semibold">
-                Available via WhatsApp & Call
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                id="btn-modal-wa-secondary"
-                type="button"
-                onClick={() => handleWhatsApp(SECONDARY_PHONE.clean)}
-                className="bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-2 px-2.5 rounded text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-[0.98]"
-              >
-                <MessageSquare size={15} />
-                <span>WhatsApp</span>
-              </button>
-              <a
-                id="btn-modal-call-secondary"
-                href={SECONDARY_PHONE.tel}
                 className="bg-[#4b6ba3] hover:bg-blue-800 text-white font-bold py-2 px-2.5 rounded text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-[0.98]"
               >
                 <Phone size={15} />

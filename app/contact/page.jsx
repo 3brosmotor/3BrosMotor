@@ -116,36 +116,13 @@ export default function ContactPage() {
                 <a 
                   href={PRIMARY_PHONE.tel} 
                   className="hover:text-yellow-300 transition-colors flex items-center gap-1"
-                  title="Call +255 787 222 222"
+                  title="Call +255 693 100 680"
                 >
                   <Phone size={12} className="text-yellow-400" />
                   <span>{PRIMARY_PHONE.display}</span>
                 </a>
                 <a 
                   href={PRIMARY_PHONE.whatsappUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-emerald-400 hover:text-emerald-300 transition-colors ml-0.5"
-                  title="WhatsApp +255 787 222 222"
-                >
-                  <MessageSquare size={13} />
-                </a>
-              </div>
-
-              <span className="text-gray-600 hidden sm:inline">|</span>
-
-              {/* Phone Line 2 */}
-              <div className="flex items-center gap-1.5">
-                <a 
-                  href={SECONDARY_PHONE.tel} 
-                  className="hover:text-yellow-300 transition-colors flex items-center gap-1"
-                  title="Call +255 693 100 680"
-                >
-                  <Phone size={12} className="text-yellow-400" />
-                  <span>{SECONDARY_PHONE.display}</span>
-                </a>
-                <a 
-                  href={SECONDARY_PHONE.whatsappUrl} 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="text-emerald-400 hover:text-emerald-300 transition-colors ml-0.5"
@@ -470,35 +447,14 @@ export default function ContactPage() {
                   {errors.message && <p className="text-red-600 text-[11px] mt-1">{errors.message}</p>}
                 </div>
 
-                {/* Send Target Selection */}
-                <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs">
-                  <span className="font-bold text-gray-700 block mb-1.5">
-                    Select WhatsApp Number:
+                {/* WhatsApp Contact Note */}
+                <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs flex items-center justify-between">
+                  <span className="font-bold text-gray-700">
+                    Official WhatsApp Line:
                   </span>
-                  <div className="flex flex-wrap gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer font-medium text-gray-800">
-                      <input 
-                        type="radio" 
-                        name="targetNumber" 
-                        value={PRIMARY_PHONE.clean} 
-                        checked={activeTargetNumber === PRIMARY_PHONE.clean} 
-                        onChange={() => setActiveTargetNumber(PRIMARY_PHONE.clean)}
-                        className="text-[#4b6ba3] focus:ring-[#4b6ba3]"
-                      />
-                      <span className="font-mono font-bold">{PRIMARY_PHONE.display}</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer font-medium text-gray-800">
-                      <input 
-                        type="radio" 
-                        name="targetNumber" 
-                        value={SECONDARY_PHONE.clean} 
-                        checked={activeTargetNumber === SECONDARY_PHONE.clean} 
-                        onChange={() => setActiveTargetNumber(SECONDARY_PHONE.clean)}
-                        className="text-[#4b6ba3] focus:ring-[#4b6ba3]"
-                      />
-                      <span className="font-mono font-bold">{SECONDARY_PHONE.display}</span>
-                    </label>
-                  </div>
+                  <span className="font-mono font-bold text-gray-900 bg-white px-2.5 py-1 rounded border border-gray-300">
+                    {PRIMARY_PHONE.display}
+                  </span>
                 </div>
 
                 {/* Submit Action */}
@@ -645,10 +601,6 @@ export default function ContactPage() {
                 <span className="flex items-center gap-1">
                   <span className="text-gray-400">Tel:</span>
                   <a href={PRIMARY_PHONE.tel} className="hover:underline text-white font-medium">{PRIMARY_PHONE.display}</a>
-                </span>
-                <span className="text-gray-600 hidden sm:inline">•</span>
-                <span className="flex items-center gap-1">
-                  <a href={SECONDARY_PHONE.tel} className="hover:underline text-white font-medium">{SECONDARY_PHONE.display}</a>
                 </span>
               </div>
             </div>
