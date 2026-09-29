@@ -376,7 +376,7 @@ export default function ContactPage() {
                     name="name"
                     type="text"
                     required
-                    placeholder="e.g. Haroon / Juma Mwangi"
+                    placeholder="e.g. Abc"
                     value={formData.name}
                     onChange={handleInputChange}
                     className={`w-full px-3 py-2 border rounded text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-[#4b6ba3] ${
