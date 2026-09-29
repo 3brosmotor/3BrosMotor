@@ -113,7 +113,7 @@ const dealershipSchema = {
   logo: `${siteUrl}/logo.png`,
   image: `${siteUrl}/Slide_1.1.jpg`,
   description: 'Premier automotive dealership in Tanzania offering premium Japanese imports, commercial trucks, SUVs, and passenger vehicles with direct shipping and clearing in Mwanza and Dar es Salaam.',
-  telephone: ['+255693100680'],
+  telephone: ['+255671361160', '+255693100680'],
   email: '3brosmotor@gmail.com',
   priceRange: '$$ - $$$$',
   currenciesAccepted: 'USD, TZS',
@@ -209,7 +209,7 @@ const faqSchema = {
       name: 'How do I import a vehicle from Japan through 3BrosMotor?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Simply reach out via WhatsApp at +255 693 100 680 with your preferred make, model, and requirements. Our team will source auction units, bid on your behalf, handle shipping from Japan to Dar es Salaam port, and complete customs clearance for you.',
+        text: 'Simply reach out via WhatsApp at +255 671 361 160 or +255 693 100 680 with your preferred make, model, and requirements. Our team will source auction units, bid on your behalf, handle shipping from Japan to Dar es Salaam port, and complete customs clearance for you.',
       },
     },
     {

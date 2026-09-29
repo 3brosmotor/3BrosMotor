@@ -96,16 +96,19 @@ export default function VehicleInquiryModal({ car, onClose }) {
             Contact our sales team directly:
           </div>
 
-          {/* Primary Line */}
+          {/* Line 1 */}
           <div className="border border-gray-300 bg-gray-50/70 rounded-lg p-3 hover:border-gray-400 transition">
             <div className="flex justify-between items-center mb-2">
               <div className="flex items-center gap-2">
                 <span className="font-mono font-black text-gray-900 text-sm sm:text-base">
                   {PRIMARY_PHONE.display}
                 </span>
+                <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">
+                  Line 1
+                </span>
               </div>
               <span className="text-[11px] text-gray-500 font-semibold">
-                Available via WhatsApp & Call
+                WhatsApp &amp; Call
               </span>
             </div>
 
@@ -122,6 +125,43 @@ export default function VehicleInquiryModal({ car, onClose }) {
               <a
                 id="btn-modal-call-primary"
                 href={PRIMARY_PHONE.tel}
+                className="bg-[#4b6ba3] hover:bg-blue-800 text-white font-bold py-2 px-2.5 rounded text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-[0.98]"
+              >
+                <Phone size={15} />
+                <span>Call Now</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Line 2 */}
+          <div className="border border-gray-300 bg-gray-50/70 rounded-lg p-3 hover:border-gray-400 transition">
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-black text-gray-900 text-sm sm:text-base">
+                  {SECONDARY_PHONE.display}
+                </span>
+                <span className="text-[10px] font-bold text-gray-700 bg-gray-200 px-1.5 py-0.5 rounded">
+                  Line 2
+                </span>
+              </div>
+              <span className="text-[11px] text-gray-500 font-semibold">
+                WhatsApp &amp; Call
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                id="btn-modal-wa-secondary"
+                type="button"
+                onClick={() => handleWhatsApp(SECONDARY_PHONE.clean)}
+                className="bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-2 px-2.5 rounded text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-[0.98] cursor-pointer"
+              >
+                <MessageSquare size={15} />
+                <span>WhatsApp</span>
+              </button>
+              <a
+                id="btn-modal-call-secondary"
+                href={SECONDARY_PHONE.tel}
                 className="bg-[#4b6ba3] hover:bg-blue-800 text-white font-bold py-2 px-2.5 rounded text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-[0.98]"
               >
                 <Phone size={15} />

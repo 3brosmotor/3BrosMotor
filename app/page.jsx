@@ -7,7 +7,7 @@ import Logo from './components/Logo';
 import VehicleInquiryModal from './components/VehicleInquiryModal';
 import VehicleDetailModal from './components/VehicleDetailModal';
 import SocialIcons from './components/SocialIcons';
-import DealershipSeoSection from './components/DealershipSeoSection';
+// import DealershipSeoSection from './components/DealershipSeoSection'; call at line number: 934
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getStoredCars, INVENTORY_EVENT, DEMO_CARS, initCarStoreSync } from './lib/carStore';
@@ -218,14 +218,15 @@ export default function Home() {
         {/* Top Black Bar with Dual Contact Lines */}
         <div id="top-bar" className="bg-black text-white py-1.5 border-b border-gray-800 text-xs">
           <div className="container mx-auto max-w-[1240px] px-3 flex flex-wrap justify-between items-center gap-2 font-bold tracking-wide">
-            {/* Single Unified Contact Line */}
+            {/* Dual Contact Lines */}
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 text-[11px] sm:text-xs">
+              {/* Line 1 */}
               <div className="flex items-center gap-1.5">
                 <a 
                   id="link-topbar-call-primary"
                   href={PRIMARY_PHONE.tel} 
-                  className="text-white hover:text-yellow-300 transition-colors flex items-center gap-1"
-                  title="Call +255 693 100 680"
+                  className="text-white hover:text-yellow-300 transition-colors flex items-center gap-1 font-semibold"
+                  title={`Call ${PRIMARY_PHONE.display}`}
                 >
                   <Phone size={12} className="text-yellow-400" />
                   <span>{PRIMARY_PHONE.display}</span>
@@ -236,7 +237,32 @@ export default function Home() {
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="text-emerald-400 hover:text-emerald-300 transition-colors ml-0.5"
-                  title="WhatsApp +255 693 100 680"
+                  title={`WhatsApp ${PRIMARY_PHONE.display}`}
+                >
+                  <MessageSquare size={13} />
+                </a>
+              </div>
+
+              <span className="text-gray-600 hidden sm:inline">•</span>
+
+              {/* Line 2 */}
+              <div className="flex items-center gap-1.5">
+                <a 
+                  id="link-topbar-call-secondary"
+                  href={SECONDARY_PHONE.tel} 
+                  className="text-white hover:text-yellow-300 transition-colors flex items-center gap-1 font-semibold"
+                  title={`Call ${SECONDARY_PHONE.display}`}
+                >
+                  <Phone size={12} className="text-yellow-400" />
+                  <span>{SECONDARY_PHONE.display}</span>
+                </a>
+                <a 
+                  id="link-topbar-wa-secondary"
+                  href={SECONDARY_PHONE.whatsappUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-emerald-400 hover:text-emerald-300 transition-colors ml-0.5"
+                  title={`WhatsApp ${SECONDARY_PHONE.display}`}
                 >
                   <MessageSquare size={13} />
                 </a>
@@ -290,7 +316,7 @@ export default function Home() {
                 <span>Contact Us</span>
               </Link>
 
-              {/* Official 3BrosMotor Social Acc (Instagram, Facebook, LinkedIn, TikTok) */}
+              {/* Official 3BrosMotor Social Accounts (Instagram, Facebook, LinkedIn, TikTok) */}
               <SocialIcons variant="header" />
             </div>
           </div>
@@ -905,7 +931,7 @@ export default function Home() {
         </main>
 
         {/* High-ranking SEO Authority & FAQ Section */}
-        <DealershipSeoSection />
+        {/* <DealershipSeoSection /> */}
       </div>
 
       {/* FOOTER matching screenshot */}
@@ -945,7 +971,13 @@ export default function Home() {
                 <span className="flex items-center gap-1">
                   <span className="text-gray-400">Tel:</span>
                   <a href={PRIMARY_PHONE.tel} className="hover:underline text-white font-medium">{PRIMARY_PHONE.display}</a>
-                  <a href={PRIMARY_PHONE.whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300" title="WhatsApp +255 693 100 680">💬</a>
+                  <a href={PRIMARY_PHONE.whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300 ml-0.5" title={`WhatsApp ${PRIMARY_PHONE.display}`}>💬</a>
+                </span>
+                <span className="text-gray-600 hidden sm:inline">•</span>
+                <span className="flex items-center gap-1">
+                  <span className="text-gray-400">Tel:</span>
+                  <a href={SECONDARY_PHONE.tel} className="hover:underline text-white font-medium">{SECONDARY_PHONE.display}</a>
+                  <a href={SECONDARY_PHONE.whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300 ml-0.5" title={`WhatsApp ${SECONDARY_PHONE.display}`}>💬</a>
                 </span>
               </div>
             </div>

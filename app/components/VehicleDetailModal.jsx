@@ -265,25 +265,62 @@ export default function VehicleDetailModal({ car, onClose, onOpenInquiry }) {
                   </div>
                 </div>
 
-                {/* Primary WhatsApp Sales Line */}
-                <button
-                  id="btn-detail-wa-primary"
-                  type="button"
-                  onClick={() => handleWhatsApp(PRIMARY_PHONE)}
-                  className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-black py-3 px-3 rounded-lg text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99] cursor-pointer"
-                >
-                  <MessageSquare size={18} />
-                  <span>WhatsApp {PRIMARY_PHONE.display}</span>
-                </button>
+                {/* Both Contact Lines (WhatsApp & Call) */}
+                <div className="space-y-2">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 space-y-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-gray-800 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>Line 1: {PRIMARY_PHONE.display}</span>
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        id="btn-detail-wa-primary"
+                        type="button"
+                        onClick={() => handleWhatsApp(PRIMARY_PHONE)}
+                        className="bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-2 px-2 rounded text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-[0.98] cursor-pointer"
+                      >
+                        <MessageSquare size={14} />
+                        <span>WhatsApp</span>
+                      </button>
+                      <a
+                        href={PRIMARY_PHONE.tel}
+                        className="bg-[#4b6ba3] hover:bg-blue-800 text-white font-bold py-2 px-2 rounded text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-[0.98] text-center"
+                      >
+                        <Phone size={14} />
+                        <span>Call</span>
+                      </a>
+                    </div>
+                  </div>
 
-                {/* Direct Phone Call */}
-                <a
-                  href={PRIMARY_PHONE.tel}
-                  className="w-full bg-[#4b6ba3] hover:bg-blue-800 text-white font-bold py-2.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-[0.99] text-center"
-                >
-                  <Phone size={15} />
-                  <span>Call {PRIMARY_PHONE.display}</span>
-                </a>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 space-y-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-gray-800 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span>Line 2: {SECONDARY_PHONE.display}</span>
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        id="btn-detail-wa-secondary"
+                        type="button"
+                        onClick={() => handleWhatsApp(SECONDARY_PHONE)}
+                        className="bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-2 px-2 rounded text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-[0.98] cursor-pointer"
+                      >
+                        <MessageSquare size={14} />
+                        <span>WhatsApp</span>
+                      </button>
+                      <a
+                        href={SECONDARY_PHONE.tel}
+                        className="bg-[#4b6ba3] hover:bg-blue-800 text-white font-bold py-2 px-2 rounded text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-[0.98] text-center"
+                      >
+                        <Phone size={14} />
+                        <span>Call</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="pt-3 border-t border-gray-100 text-[11px] text-gray-600 space-y-1.5">
                   <div className="flex items-center gap-1.5">

@@ -1,22 +1,22 @@
 /**
- * Dealership Contact Config
+ * Dealership Contact Configuration
  * Centralized contact lines, WhatsApp handlers, and business location information
  */
 
 export const PRIMARY_PHONE = {
   id: 'phone1',
   label: 'Phone Line 1',
-  badge: '',
-  display: '+255 693 100 680',
-  clean: '255693100680',
-  tel: 'tel:+255693100680',
-  whatsappUrl: 'https://wa.me/255693100680',
+  badge: 'Sales & Inquiries',
+  display: '+255 671 361 160',
+  clean: '255671361160',
+  tel: 'tel:+255671361160',
+  whatsappUrl: 'https://wa.me/255671361160',
 };
 
 export const SECONDARY_PHONE = {
   id: 'phone2',
   label: 'Phone Line 2',
-  badge: '',
+  badge: 'Support & Orders',
   display: '+255 693 100 680',
   clean: '255693100680',
   tel: 'tel:+255693100680',

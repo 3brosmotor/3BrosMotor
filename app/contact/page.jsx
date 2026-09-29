@@ -109,14 +109,14 @@ export default function ContactPage() {
       <div>
         {/* Top Black Bar with Dual Contact Numbers */}
         <div id="top-bar" className="bg-black text-white py-1.5 border-b border-gray-800">
-          <div className="container mx-auto max-w-310 px-3 flex flex-wrap justify-between items-center text-xs font-bold gap-2">
-            <div className="flex flex-wrap items-center gap-3 sm:gap-5">
+          <div className="container mx-auto max-w-[1240px] px-3 flex flex-wrap justify-between items-center text-xs font-bold gap-2">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 text-[11px] sm:text-xs">
               {/* Phone Line 1 */}
               <div className="flex items-center gap-1.5">
                 <a 
                   href={PRIMARY_PHONE.tel} 
-                  className="hover:text-yellow-300 transition-colors flex items-center gap-1"
-                  title="Call +255 693 100 680"
+                  className="hover:text-yellow-300 transition-colors flex items-center gap-1 font-semibold"
+                  title={`Call ${PRIMARY_PHONE.display}`}
                 >
                   <Phone size={12} className="text-yellow-400" />
                   <span>{PRIMARY_PHONE.display}</span>
@@ -126,7 +126,30 @@ export default function ContactPage() {
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="text-emerald-400 hover:text-emerald-300 transition-colors ml-0.5"
-                  title="WhatsApp +255 693 100 680"
+                  title={`WhatsApp ${PRIMARY_PHONE.display}`}
+                >
+                  <MessageSquare size={13} />
+                </a>
+              </div>
+
+              <span className="text-gray-600 hidden sm:inline">•</span>
+
+              {/* Phone Line 2 */}
+              <div className="flex items-center gap-1.5">
+                <a 
+                  href={SECONDARY_PHONE.tel} 
+                  className="hover:text-yellow-300 transition-colors flex items-center gap-1 font-semibold"
+                  title={`Call ${SECONDARY_PHONE.display}`}
+                >
+                  <Phone size={12} className="text-yellow-400" />
+                  <span>{SECONDARY_PHONE.display}</span>
+                </a>
+                <a 
+                  href={SECONDARY_PHONE.whatsappUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-emerald-400 hover:text-emerald-300 transition-colors ml-0.5"
+                  title={`WhatsApp ${SECONDARY_PHONE.display}`}
                 >
                   <MessageSquare size={13} />
                 </a>
@@ -152,7 +175,7 @@ export default function ContactPage() {
 
         {/* Main Header (Dealership Blue #4b6ba3) */}
         <header id="main-header" className="bg-[#4b6ba3] py-2 sm:py-3 border-b-2 border-[#3c5683] shadow-md">
-          <div className="container mx-auto max-w-310 px-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="container mx-auto max-w-[1240px] px-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <Link 
               href="/" 
               onClick={handleLogoClick}
@@ -181,7 +204,7 @@ export default function ContactPage() {
 
         {/* Breadcrumb Header Banner */}
         <div className="bg-[#1f2837] text-white py-4 border-b border-gray-700">
-          <div className="container mx-auto max-w-310 px-3">
+          <div className="container mx-auto max-w-[1240px] px-3">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
               <div>
                 <h1 className="text-xl sm:text-2xl font-black tracking-wide text-white uppercase flex items-center gap-2">
@@ -205,7 +228,7 @@ export default function ContactPage() {
         </div>
 
         {/* Main Content Area */}
-        <main className="container mx-auto max-w-310 px-3 py-6">
+        <main className="container mx-auto max-w-[1240px] px-3 py-6">
           
           {/* Dual Phone Numbers Cards (Call & WhatsApp) */}
           <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -218,10 +241,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <div className="text-xs font-bold text-gray-500 uppercase tracking-wide">
-                    Dealership Phone Line
-                  </div>
-                  <div className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight font-mono">
-                    {PRIMARY_PHONE.display}
+                    Dealership Phone Line 1
                   </div>
                   <div className="text-xs text-gray-500 mt-0.5">
                     For car pricing, inventory visits & vehicle inquiries
@@ -260,10 +280,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <div className="text-xs font-bold text-gray-500 uppercase tracking-wide">
-                    Dealership Phone Line
-                  </div>
-                  <div className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight font-mono">
-                    {SECONDARY_PHONE.display}
+                    Dealership Phone Line 2
                   </div>
                   <div className="text-xs text-gray-500 mt-0.5">
                     Order imports, financing questions & sales support
@@ -447,14 +464,53 @@ export default function ContactPage() {
                   {errors.message && <p className="text-red-600 text-[11px] mt-1">{errors.message}</p>}
                 </div>
 
-                {/* WhatsApp Contact Note */}
-                <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs flex items-center justify-between">
-                  <span className="font-bold text-gray-700">
-                    Official WhatsApp Line:
-                  </span>
-                  <span className="font-mono font-bold text-gray-900 bg-white px-2.5 py-1 rounded border border-gray-300">
-                    {PRIMARY_PHONE.display}
-                  </span>
+                {/* WhatsApp Destination Selector */}
+                <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs">
+                  <div className="font-bold text-gray-700 mb-2 flex items-center justify-between">
+                    <span>Send Message to WhatsApp Line:</span>
+                    <span className="text-[11px] text-gray-500 font-normal">Choose recipient number</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTargetNumber(PRIMARY_PHONE.clean)}
+                      className={`p-2 rounded border text-left flex items-center justify-between transition cursor-pointer ${
+                        activeTargetNumber === PRIMARY_PHONE.clean
+                          ? 'border-emerald-600 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-600'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div>
+                        <div className="text-[10px] uppercase font-bold text-gray-500">Line 1 (Sales)</div>
+                        <div className="font-mono font-bold text-xs">{PRIMARY_PHONE.display}</div>
+                      </div>
+                      <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                        activeTargetNumber === PRIMARY_PHONE.clean ? 'border-emerald-600 bg-emerald-600' : 'border-gray-300'
+                      }`}>
+                        {activeTargetNumber === PRIMARY_PHONE.clean && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveTargetNumber(SECONDARY_PHONE.clean)}
+                      className={`p-2 rounded border text-left flex items-center justify-between transition cursor-pointer ${
+                        activeTargetNumber === SECONDARY_PHONE.clean
+                          ? 'border-emerald-600 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-600'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div>
+                        <div className="text-[10px] uppercase font-bold text-gray-500">Line 2 (Support)</div>
+                        <div className="font-mono font-bold text-xs">{SECONDARY_PHONE.display}</div>
+                      </div>
+                      <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                        activeTargetNumber === SECONDARY_PHONE.clean ? 'border-emerald-600 bg-emerald-600' : 'border-gray-300'
+                      }`}>
+                        {activeTargetNumber === SECONDARY_PHONE.clean && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Submit Action */}
@@ -599,8 +655,13 @@ export default function ContactPage() {
               </div>
               <div className="text-gray-300 flex flex-wrap gap-x-3 gap-y-1 justify-center md:justify-start">
                 <span className="flex items-center gap-1">
-                  <span className="text-gray-400">Tel:</span>
+                  <span className="text-gray-400">Line 1:</span>
                   <a href={PRIMARY_PHONE.tel} className="hover:underline text-white font-medium">{PRIMARY_PHONE.display}</a>
+                </span>
+                <span className="text-gray-600 hidden sm:inline">•</span>
+                <span className="flex items-center gap-1">
+                  <span className="text-gray-400">Line 2:</span>
+                  <a href={SECONDARY_PHONE.tel} className="hover:underline text-white font-medium">{SECONDARY_PHONE.display}</a>
                 </span>
               </div>
             </div>
