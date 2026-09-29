@@ -17,6 +17,7 @@ const SLIDES = [
    
     label: "NEW ARRIVALS",
     bgUrl: "/Slide_2.2.jpg",
+    objectPosition: "center bottom",
     
   },
   {
@@ -24,7 +25,7 @@ const SLIDES = [
    
     label: "SPECIAL OFFERS",
     bgUrl: "/Slide_3.jpg",
-    className: "pt-4"
+    objectPosition: "center top",
   },
   {
     id: 4,
@@ -51,9 +52,9 @@ export default function HeroSlider() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % SLIDES.length);
-    }, 5000);
+    }, 6500);
     return () => clearInterval(timer);
-  }, []);
+  }, [currentIndex]);
 
   const handlePrev = (e) => {
     e?.stopPropagation?.();
@@ -100,7 +101,7 @@ export default function HeroSlider() {
       >
         <div 
           key={currentIndex} 
-          className={`absolute inset-0 overflow-hidden ${SLIDES[currentIndex].containerClassName || ''}`}
+          className={`absolute inset-0 overflow-hidden animate-in fade-in duration-700 ease-in-out ${SLIDES[currentIndex].containerClassName || ''}`}
         >
           <div className="relative w-full h-full">
             <Image 
