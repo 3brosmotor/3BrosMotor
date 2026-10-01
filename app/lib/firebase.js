@@ -1,14 +1,16 @@
 import { initializeApp, getApps, getApp, setLogLevel } from 'firebase/app';
-import { initializeFirestore, getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { initializeFirestore, getFirestore, setLogLevel as setFirestoreLogLevel } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
-// Silence verbose Firebase internal root logger warnings in browser console
+// Silence verbose Firebase and Firestore internal connectivity logs
 try {
-  setLogLevel('error');
-} catch {
-  // Ignore if already set
-}
+  setLogLevel('silent');
+} catch {}
+
+try {
+  setFirestoreLogLevel('silent');
+} catch {}
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyAkmidm20fPXeuJMZdBlTApuWe_3zz6KbA",
@@ -24,12 +26,14 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 let firestoreInstance;
 try {
-  firestoreInstance = getFirestore(app);
+  // Use HTTP long polling to prevent WebSocket/streaming issues in proxied/cloud environments
+  firestoreInstance = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+    ignoreUndefinedProperties: true
+  });
 } catch {
   try {
-    firestoreInstance = initializeFirestore(app, {
-      ignoreUndefinedProperties: true
-    });
+    firestoreInstance = getFirestore(app);
   } catch {
     firestoreInstance = null;
   }
@@ -42,9 +46,11 @@ try {
   storageInstance = null;
 }
 
+export { app, firebaseConfig };
 export const db = firestoreInstance;
 export const auth = getAuth(app);
 export const storage = storageInstance;
+export const googleProvider = new GoogleAuthProvider();
 
 export const OperationType = {
   CREATE: 'create',

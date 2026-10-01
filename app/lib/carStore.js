@@ -99,10 +99,14 @@ export function initCarStoreSync() {
         console.error('Car store snapshot handling error:', e);
       }
     }, (error) => {
-      // Gracefully handle aborted, network, or superseded connection warnings
+      // Gracefully handle aborted, offline, unavailable, network, or superseded connection states
       const msg = error?.message || '';
+      const code = error?.code || '';
       if (
         error?.name !== 'AbortError' &&
+        code !== 'unavailable' &&
+        !msg.includes('unavailable') &&
+        !msg.includes('offline') &&
         !msg.includes('aborted') &&
         !msg.includes('superseded') &&
         !msg.includes('fetch') &&
@@ -114,8 +118,12 @@ export function initCarStoreSync() {
     });
   } catch (err) {
     const msg = err?.message || '';
+    const code = err?.code || '';
     if (
       err?.name !== 'AbortError' &&
+      code !== 'unavailable' &&
+      !msg.includes('unavailable') &&
+      !msg.includes('offline') &&
       !msg.includes('aborted') &&
       !msg.includes('superseded') &&
       !msg.includes('fetch') &&

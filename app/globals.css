@@ -9,3 +9,10 @@ body {
   background-color: #f8fafc;
   color: #0f172a;
 }
+
+/* Ensure on desktop (lg:) that row 1 is strictly sized to the hero slider without empty gap */
+@media (min-width: 1024px) {
+  #main-layout-container {
+    grid-template-rows: max-content 1fr !important;
+  }
+}

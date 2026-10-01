@@ -323,12 +323,15 @@ export default function Home() {
         </header>
 
         {/* Main Container: On desktop (lg:) 2-column layout [210px_1fr], on mobile/tablet (grid-cols-1) where Hero Banner is shown first at top */}
-        <main className="container mx-auto max-w-[1240px] px-3 py-3 grid grid-cols-1 lg:grid-cols-[210px_1fr] gap-3 items-start">
+        <main 
+          id="main-layout-container" 
+          className="container mx-auto max-w-[1240px] px-3 py-3 grid grid-cols-1 lg:grid-cols-[210px_1fr] lg:grid-rows-[max-content_1fr] gap-3 items-start"
+        >
           
           {/* Top Section: Hero Banner + Search Vehicles Box
               - On Mobile/Tablet: Rendered 1st, so hero image slider is shown at top of main screen!
               - On Desktop (lg:): Placed in Column 2, Row 1 (Right side top, next to sidebar) */}
-          <div id="hero-and-search-section" className="lg:col-start-2 lg:row-start-1 min-w-0">
+          <div id="hero-and-search-section" className="lg:col-start-2 lg:row-start-1 min-w-0 self-start">
             <div className="flex flex-col md:flex-row gap-3">
               {/* 3BrosMotor Banner Collage */}
               <HeroSlider />
@@ -565,7 +568,7 @@ export default function Home() {
           {/* Right Main Inventory Section (Yellow Search Bar + Car Table + Pagination)
               - On Mobile/Tablet: Rendered 3rd
               - On Desktop (lg:): Placed in Column 2, Row 2 */}
-          <div id="main-inventory-section" className="lg:col-start-2 lg:row-start-2 min-w-0 flex flex-col">
+          <div id="main-inventory-section" className="lg:col-start-2 lg:row-start-2 min-w-0 flex flex-col self-start w-full">
 
             {/* Yellow Search Vehicles Bar matching screenshot */}
             <div id="global-search-bar" className="flex border border-gray-300 mb-3 h-9 bg-white shadow-sm">

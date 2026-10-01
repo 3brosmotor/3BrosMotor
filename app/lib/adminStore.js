@@ -114,8 +114,12 @@ export function initAdminStoreSync() {
       }
     }, (err) => {
       const msg = err?.message || '';
+      const code = err?.code || '';
       if (
         err?.name !== 'AbortError' &&
+        code !== 'unavailable' &&
+        !msg.includes('unavailable') &&
+        !msg.includes('offline') &&
         !msg.includes('aborted') &&
         !msg.includes('fetch') &&
         !msg.includes('Failed to fetch') &&
@@ -126,8 +130,12 @@ export function initAdminStoreSync() {
     });
   } catch (err) {
     const msg = err?.message || '';
+    const code = err?.code || '';
     if (
       err?.name !== 'AbortError' &&
+      code !== 'unavailable' &&
+      !msg.includes('unavailable') &&
+      !msg.includes('offline') &&
       !msg.includes('aborted') &&
       !msg.includes('fetch') &&
       !msg.includes('network')

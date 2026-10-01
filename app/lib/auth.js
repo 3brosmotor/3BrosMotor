@@ -1,5 +1,5 @@
 // Admin Authentication & Session Management for 3BrosMotor Dealership
-import { auth, googleProvider } from '../../lib/firebase';
+import { auth, googleProvider } from './firebase';
 import { 
   signInWithEmailAndPassword, 
   signInWithPopup, 
