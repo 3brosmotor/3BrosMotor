@@ -27,7 +27,10 @@ export default function AdminSidebar({
   setActiveTab, 
   isCollapsed, 
   setIsCollapsed,
-  vehicleCount = 5,
+  vehicleCount = 0,
+  calendarCount = 0,
+  remindersCount = 0,
+  notesCount = 0,
   onLogout,
   isMobileOpen = false,
   setIsMobileOpen
@@ -37,13 +40,13 @@ export default function AdminSidebar({
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Gauge, badge: null },
     { id: 'add-vehicle', label: 'Add Vehicle', icon: Plus, badge: 'New' },
-    { id: 'vehicles', label: 'Vehicles', icon: Car, badge: vehicleCount },
+    { id: 'vehicles', label: 'Vehicles', icon: Car, badge: vehicleCount > 0 ? vehicleCount : null },
     { id: 'sold-vehicles', label: 'Sold Vehicles', icon: CheckCircle2, badge: null },
     { id: 'expenses', label: 'Vehicle Expenses', icon: DollarSign, badge: null },
     { id: 'management', label: 'Vehicles Management', icon: SlidersHorizontal, badge: null },
-    { id: 'calendar', label: 'Calendar', icon: Calendar, badge: '3' },
-    { id: 'reminders', label: 'Reminders', icon: Bookmark, badge: '4' },
-    { id: 'notes', label: 'Notes', icon: Bell, badge: '3' },
+    { id: 'calendar', label: 'Calendar', icon: Calendar, badge: calendarCount > 0 ? calendarCount : null },
+    { id: 'reminders', label: 'Reminders', icon: Bookmark, badge: remindersCount > 0 ? remindersCount : null },
+    { id: 'notes', label: 'Notes', icon: Bell, badge: notesCount > 0 ? notesCount : null },
     { id: 'documents', label: 'Documents', icon: FileText, badge: null },
   ];
 

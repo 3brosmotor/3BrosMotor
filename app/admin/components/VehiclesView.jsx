@@ -10,23 +10,17 @@ import {
   ExternalLink, 
   CheckCircle, 
   MapPin, 
-  Download, 
   Plus, 
-  LayoutGrid,
-  Table as TableIcon,
   X,
   Gauge,
   Fuel,
-  CloudUpload,
-  FileUp,
-  FileDown,
   AlertTriangle,
   CheckCircle2,
   HelpCircle,
   RefreshCw
 } from 'lucide-react';
 import MultiPhotoUpload from './MultiPhotoUpload';
-import { syncAllCarsToFirestore, testFirestoreConnection, importFleetJSON } from '../../lib/carStore';
+import { clearAllDemoCars } from '../../lib/carStore';
 
 export default function VehiclesView({ 
   cars = [], 
@@ -38,11 +32,22 @@ export default function VehiclesView({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBodyType, setSelectedBodyType] = useState('ALL');
   const [selectedLocation, setSelectedLocation] = useState('ALL');
-  const [viewMode, setViewMode] = useState('auto'); // 'auto' | 'cards' | 'table'
   const [editingCar, setEditingCar] = useState(null);
   const [syncStatus, setSyncStatus] = useState(null); // { type: 'success' | 'warning' | 'error', message: string, details?: string }
-  const [isSyncing, setIsSyncing] = useState(false);
-  const jsonFileInputRef = useState(null)[0];
+
+  const demoCarsList = cars.filter(c => ['1001', '1002', '1003', '1004', '1005'].includes(String(c.id)));
+  const hasDemoCars = demoCarsList.length > 0;
+
+  const handlePurgeDemoCars = async () => {
+    if (!confirm('Are you sure you want to remove all demo cars from the inventory? This will permanently delete demo cars so only your real vehicles remain.')) {
+      return;
+    }
+    await clearAllDemoCars();
+    setSyncStatus({
+      type: 'success',
+      message: 'All demo vehicles have been permanently removed from the live production database!'
+    });
+  };
 
   // Filter cars
   const filteredCars = cars.filter(car => {
@@ -87,83 +92,6 @@ export default function VehiclesView({
     setEditingCar(null);
   };
 
-  const handleExportCSV = () => {
-    const headers = ['ID,Make,Model,Year,Chassis,Price,Location,BodyType,Fuel,Mileage'];
-    const rows = filteredCars.map(c => 
-      `"${c.id}","${c.make}","${c.model}","${c.year}","${c.chassis}","${c.price}","${c.location}","${c.bodyType}","${c.fuel}","${c.mileage}"`
-    );
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `3B_Motors_Stock_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleExportJSON = () => {
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(cars, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `3bros_inventory_${new Date().toISOString().split('T')[0]}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-  };
-
-  const handleImportJSONFile = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const res = importFleetJSON(event.target.result);
-      if (res.success) {
-        setSyncStatus({
-          type: 'success',
-          message: `Successfully imported ${res.count} vehicles with Cloudinary photos! Data is now saved and active.`
-        });
-      } else {
-        setSyncStatus({
-          type: 'error',
-          message: res.error || 'Failed to parse JSON file'
-        });
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
-  const handleSyncToCloud = async () => {
-    setIsSyncing(true);
-    setSyncStatus(null);
-    const conn = await testFirestoreConnection();
-    if (conn.status === 'permission-denied') {
-      setIsSyncing(false);
-      setSyncStatus({
-        type: 'warning',
-        message: 'Firebase Database Rules are currently locked in Firebase Console.',
-        details: 'Go to console.firebase.google.com -> Firestore Database -> Rules -> allow read, write: if true; and click Publish.'
-      });
-      return;
-    }
-
-    const res = await syncAllCarsToFirestore(cars);
-    setIsSyncing(false);
-    if (res.success) {
-      setSyncStatus({
-        type: 'success',
-        message: `Synced ${res.count} vehicles with all photos to Firebase Cloud! Live for every visitor on Vercel.`
-      });
-    } else {
-      setSyncStatus({
-        type: res.isPermissionDenied ? 'warning' : 'error',
-        message: res.error || 'Sync failed',
-        details: res.isPermissionDenied ? 'Please publish read/write rules in Firebase Console.' : undefined
-      });
-    }
-  };
-
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Cloud Sync Diagnostic Banner */}
@@ -199,6 +127,25 @@ export default function VehiclesView({
       )}
 
       {/* Header */}
+      {hasDemoCars && (
+        <div className="p-3 sm:p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl flex-shrink-0">⚠️</span>
+            <div>
+              <span className="font-bold text-amber-950">Live Production Cleanup:</span> You currently have {demoCarsList.length} starter demo car(s) in your fleet. Click to remove all demo cars so only your genuine inventory is shown to visitors.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handlePurgeDemoCars}
+            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs transition shadow-xs flex-shrink-0 self-start sm:self-auto cursor-pointer"
+          >
+            Remove All Demo Cars
+          </button>
+        </div>
+      )}
+
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-gray-200">
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
@@ -213,141 +160,20 @@ export default function VehiclesView({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          {/* Cloud Database Sync Button */}
-          <button
-            type="button"
-            onClick={handleSyncToCloud}
-            disabled={isSyncing}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer"
-            title="Push all vehicles and Cloudinary photos to Firebase Cloud Database so everyone sees them on Vercel"
-          >
-            <CloudUpload size={14} className={isSyncing ? 'animate-spin' : ''} />
-            <span>{isSyncing ? 'Syncing...' : 'Sync to Cloud'}</span>
-          </button>
-
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onAddNew}
-            className="bg-[#111827] hover:bg-black text-white text-xs font-bold px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+            className="bg-[#111827] hover:bg-black text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer"
           >
             <Plus size={15} />
             <span>Add Vehicle</span>
           </button>
-
-          {/* Export JSON Button */}
-          <button
-            type="button"
-            onClick={handleExportJSON}
-            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 text-xs font-bold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer"
-            title="Backup current fleet data with Cloudinary URLs to a JSON file"
-          >
-            <FileDown size={14} />
-            <span className="hidden sm:inline">Backup JSON</span>
-            <span className="sm:hidden">JSON</span>
-          </button>
-
-          {/* Import JSON Button */}
-          <label className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 text-xs font-bold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer m-0">
-            <FileUp size={14} />
-            <span className="hidden sm:inline">Import JSON</span>
-            <span className="sm:hidden">Import</span>
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImportJSONFile}
-              className="hidden"
-            />
-          </label>
-
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 text-xs font-bold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer"
-          >
-            <Download size={14} />
-            <span className="hidden sm:inline">Export CSV</span>
-            <span className="sm:hidden">CSV</span>
-          </button>
-
-          {/* View mode toggle (Table vs Cards) */}
-          <div className="flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-200 text-gray-600">
-            <button
-              type="button"
-              onClick={() => setViewMode('cards')}
-              title="Card View"
-              className={`p-1.5 rounded-md transition cursor-pointer ${
-                viewMode === 'cards' || viewMode === 'auto' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              <LayoutGrid size={14} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('table')}
-              title="Table View"
-              className={`p-1.5 rounded-md transition cursor-pointer ${
-                viewMode === 'table' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              <TableIcon size={14} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Search & Filter Controls */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4 space-y-2.5 sm:space-y-3">
-        <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
-          {/* Search Bar */}
-          <div className="flex-1 relative">
-            <Search size={15} className="absolute left-3 top-2.5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search make, model, chassis, or year..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs outline-none focus:ring-2 focus:ring-[#4b6ba3]"
-            />
-          </div>
-
-          {/* Location Filter */}
-          <div className="flex items-center gap-2 text-xs">
-            <span className="font-bold text-gray-500 whitespace-nowrap">Location:</span>
-            <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
-              className="w-full sm:w-auto border border-gray-300 rounded-lg px-2.5 py-1.5 sm:py-2 bg-white text-xs outline-none"
-            >
-              {locations.map(loc => (
-                <option key={loc} value={loc}>{loc}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Body Type Pills - horizontally scrollable without breaking on small phones */}
-        <div className="flex items-center gap-1.5 pt-2 border-t border-gray-100 text-xs overflow-x-auto no-scrollbar pb-1">
-          <span className="font-bold text-gray-400 text-[11px] mr-1 flex-shrink-0">Type:</span>
-          {bodyTypes.map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => setSelectedBodyType(type)}
-              className={`px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap transition cursor-pointer flex-shrink-0 ${
-                selectedBodyType === type
-                  ? 'bg-gray-900 text-white font-bold'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {type}
-            </button>
-          ))}
         </div>
       </div>
 
       {/* 1. Mobile Cards View (displayed on mobile when auto or when cards view is selected) */}
-      <div className={`${viewMode === 'table' ? 'hidden' : 'block md:hidden'} space-y-3`}>
+      <div className="block md:hidden space-y-3">
         {filteredCars.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500 text-xs">
             No vehicles found matching "{searchTerm}". Try clearing search.
@@ -460,7 +286,7 @@ export default function VehiclesView({
       </div>
 
       {/* 2. Desktop/Tablet Inventory Table (displayed on md+ or when table view mode is explicitly toggled) */}
-      <div className={`bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden ${viewMode === 'cards' ? 'hidden' : 'hidden md:block'}`}>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>

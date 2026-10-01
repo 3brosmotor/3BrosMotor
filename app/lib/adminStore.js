@@ -61,36 +61,12 @@ export function compressImage(fileOrDataUrl, maxWidth = 320, quality = 0.82) {
   });
 }
 
-// Default initial data for clean demo start
-const INITIAL_EXPENSES = [
-  { id: 'exp-1', title: 'TRA Customs Duty & Port Clearance (Hilux Revo)', vehicleStock: '1001', category: 'Clearance', amount: 3200, date: '2026-09-18', status: 'Paid' },
-  { id: 'exp-2', title: 'Trans-Tanzania Flatbed Freight Dar -> Mwanza Yard', vehicleStock: '1002', category: 'Transport', amount: 950, date: '2026-09-15', status: 'Paid' },
-  { id: 'exp-3', title: 'JEVIC Pre-Shipment Inspection & Valet Polish', vehicleStock: '1003', category: 'Maintenance', amount: 450, date: '2026-09-12', status: 'Paid' }
-];
-
-const INITIAL_SOLD = [
-  { id: 'sold-1', carId: '998', make: 'Toyota', model: 'Land Cruiser Prado TX', year: '2016', chassis: 'GDJ150-1092834', customerName: 'Hon. Josephat Mwita', customerPhone: '+255 754 112 233', salePrice: 42000, purchaseCost: 35000, profit: 7000, saleDate: '2026-09-10', paymentMethod: 'Bank Transfer' },
-  { id: 'sold-2', carId: '999', make: 'Toyota', model: 'Harrier Premium', year: '2015', chassis: 'AVU65-0019284', customerName: 'Dr. Neema Kimaro', customerPhone: '+255 713 889 900', salePrice: 21500, purchaseCost: 17200, profit: 4300, saleDate: '2026-09-02', paymentMethod: 'Direct Cash' }
-];
-
-const INITIAL_CALENDAR = [
-  { id: 'evt-1', title: 'Port Vessel Arrival: MSC Nicole (3 Scania Trucks & 2 Hilux)', date: '2026-09-24', time: '09:00 AM', location: 'Dar es Salaam Port Berth 4', type: 'Shipment', notes: 'Prepare TRA clearance documents with agent' },
-  { id: 'evt-2', title: 'VIP Client Test Drive: Prado TX-L 2019 (Mr. Baraka)', date: '2026-09-25', time: '02:30 PM', location: 'Mwanza Sabasaba Yard', type: 'Appointment', notes: 'Vehicle washed & battery checked' },
-  { id: 'evt-3', title: 'Japan Auction Bid Round (Toyota Prado & Land Cruiser 79)', date: '2026-09-28', time: '04:00 AM', location: 'Online USS Tokyo Auction', type: 'Auction', notes: 'Budget allocated: $75,000' }
-];
-
-const INITIAL_REMINDERS = [
-  { id: 'rem-1', task: 'Submit TRA Single Customs Document (SAD) for SCANIA R450', dueDate: '2026-09-25', priority: 'High', completed: false },
-  { id: 'rem-2', task: 'Follow up with TPA regarding Mwanza train freight slots', dueDate: '2026-09-26', priority: 'Medium', completed: false },
-  { id: 'rem-3', task: 'Renew Dealership Showroom Insurance policy', dueDate: '2026-09-30', priority: 'High', completed: false },
-  { id: 'rem-4', task: 'Update weekly USD to TZS exchange rate benchmark in system', dueDate: '2026-10-01', priority: 'Low', completed: true }
-];
-
-const INITIAL_NOTES = [
-  { id: 'nt-1', title: 'Popular Requests from Lake Zone Clients', content: 'High demand for Toyota Hilux Double Cab and Land Cruiser Prado TX. Check upcoming USS Tokyo auctions for 2018-2021 clean units with mileage below 60,000 KM.', date: '2026-09-20', color: 'yellow' },
-  { id: 'nt-2', title: 'Shipping Agent Port Contact', content: 'Harbor Agent: Capt. Ramadhani (+255 768 444 888) handling berth clearance at Dar es Salaam port terminal 2.', date: '2026-09-18', color: 'blue' },
-  { id: 'nt-3', title: 'Yard Maintenance Notice', content: 'Security floodlights on North fence serviced. CCTV backup running normally with 45-day cycle retention.', date: '2026-09-15', color: 'green' }
-];
+// Clean production baseline: no mock or demo data
+const INITIAL_EXPENSES = [];
+const INITIAL_SOLD = [];
+const INITIAL_CALENDAR = [];
+const INITIAL_REMINDERS = [];
+const INITIAL_NOTES = [];
 
 const INITIAL_SETTINGS = {
   directorName: 'Hammad Riaz',
@@ -101,8 +77,8 @@ const INITIAL_SETTINGS = {
   tzsRate: '2650',
   autoNotifyWhatsApp: true,
   adminAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-  cloudinaryCloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '',
-  cloudinaryUploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || '',
+  cloudinaryCloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'ztiftbhu',
+  cloudinaryUploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'ml_default',
   cloudinaryApiKey: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || ''
 };
 
@@ -163,12 +139,19 @@ export function initAdminStoreSync() {
 
 // Expenses Helpers
 export function getExpenses() {
-  if (typeof window === 'undefined') return INITIAL_EXPENSES;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(EXPENSES_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : INITIAL_EXPENSES;
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const cleaned = parsed.filter(item => !['exp-1', 'exp-2', 'exp-3'].includes(item.id));
+    if (cleaned.length !== parsed.length) {
+      localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch {
-    return INITIAL_EXPENSES;
+    return [];
   }
 }
 
@@ -199,12 +182,19 @@ export function deleteExpense(id) {
 
 // Sold Vehicles Helpers
 export function getSoldVehicles() {
-  if (typeof window === 'undefined') return INITIAL_SOLD;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(SOLD_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : INITIAL_SOLD;
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const cleaned = parsed.filter(item => !['sold-1', 'sold-2'].includes(item.id));
+    if (cleaned.length !== parsed.length) {
+      localStorage.setItem(SOLD_STORAGE_KEY, JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch {
-    return INITIAL_SOLD;
+    return [];
   }
 }
 
@@ -267,12 +257,19 @@ export function deleteSoldVehicle(id) {
 
 // Calendar Events Helpers
 export function getCalendarEvents() {
-  if (typeof window === 'undefined') return INITIAL_CALENDAR;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(CALENDAR_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : INITIAL_CALENDAR;
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const cleaned = parsed.filter(e => !['evt-1', 'evt-2', 'evt-3'].includes(e.id));
+    if (cleaned.length !== parsed.length) {
+      localStorage.setItem(CALENDAR_STORAGE_KEY, JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch {
-    return INITIAL_CALENDAR;
+    return [];
   }
 }
 
@@ -296,12 +293,19 @@ export function deleteCalendarEvent(id) {
 
 // Reminders Helpers
 export function getReminders() {
-  if (typeof window === 'undefined') return INITIAL_REMINDERS;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(REMINDERS_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : INITIAL_REMINDERS;
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const cleaned = parsed.filter(r => !['rem-1', 'rem-2', 'rem-3', 'rem-4'].includes(r.id));
+    if (cleaned.length !== parsed.length) {
+      localStorage.setItem(REMINDERS_STORAGE_KEY, JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch {
-    return INITIAL_REMINDERS;
+    return [];
   }
 }
 
@@ -334,12 +338,19 @@ export function deleteReminder(id) {
 
 // Notes Helpers
 export function getNotes() {
-  if (typeof window === 'undefined') return INITIAL_NOTES;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(NOTES_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : INITIAL_NOTES;
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const cleaned = parsed.filter(n => !['nt-1', 'nt-2', 'nt-3'].includes(n.id));
+    if (cleaned.length !== parsed.length) {
+      localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch {
-    return INITIAL_NOTES;
+    return [];
   }
 }
 

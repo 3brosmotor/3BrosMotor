@@ -1,6 +1,14 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeApp, getApps, getApp, setLogLevel } from 'firebase/app';
 import { initializeFirestore, getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { getStorage } from 'firebase/storage';
+
+// Silence verbose Firebase internal root logger warnings in browser console
+try {
+  setLogLevel('error');
+} catch {
+  // Ignore if already set
+}
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyAkmidm20fPXeuJMZdBlTApuWe_3zz6KbA",
@@ -27,8 +35,16 @@ try {
   }
 }
 
+let storageInstance;
+try {
+  storageInstance = getStorage(app);
+} catch {
+  storageInstance = null;
+}
+
 export const db = firestoreInstance;
 export const auth = getAuth(app);
+export const storage = storageInstance;
 
 export const OperationType = {
   CREATE: 'create',

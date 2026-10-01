@@ -7,10 +7,10 @@ import Logo from './components/Logo';
 import VehicleInquiryModal from './components/VehicleInquiryModal';
 import VehicleDetailModal from './components/VehicleDetailModal';
 import SocialIcons from './components/SocialIcons';
-// import DealershipSeoSection from './components/DealershipSeoSection'; call at line number: 934
+// import DealershipSeoSection from './components/DealershipSeoSection';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getStoredCars, INVENTORY_EVENT, DEMO_CARS, initCarStoreSync } from './lib/carStore';
+import { getStoredCars, INVENTORY_EVENT, initCarStoreSync } from './lib/carStore';
 import { getVehicleImages } from './lib/carsData';
 import { PRIMARY_PHONE, SECONDARY_PHONE, DEALERSHIP_INFO } from './lib/contactConfig';
 
@@ -49,7 +49,7 @@ const BODY_TYPES = [
 
 export default function Home() {
   const router = useRouter();
-  const [cars, setCars] = useState(DEMO_CARS);
+  const [cars, setCars] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isAdminRedirecting, setIsAdminRedirecting] = useState(false);
   const clickCountRef = useRef(0);

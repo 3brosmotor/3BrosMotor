@@ -90,23 +90,6 @@ export default function MultiPhotoUpload({
     onChange([target, ...remaining]);
   };
 
-  // Quick generate sample angles based on make & model
-  const handleAddSampleAngles = () => {
-    const make = vehicleInfo.make || 'Toyota';
-    const model = vehicleInfo.model || 'Hilux';
-    const year = vehicleInfo.year || '2022';
-    const seed = encodeURIComponent(`${make}-${model}-${year}-${Date.now()}`.toLowerCase());
-
-    const sampleAngles = [
-      `https://picsum.photos/seed/${seed}-front/800/600`,
-      `https://picsum.photos/seed/${seed}-side/800/600`,
-      `https://picsum.photos/seed/${seed}-interior/800/600`,
-      `https://picsum.photos/seed/${seed}-rear/800/600`
-    ];
-
-    onChange([...images, ...sampleAngles]);
-  };
-
   return (
     <div className={`space-y-3 ${className}`}>
       {/* Hidden file input supporting multiple files */}
@@ -136,19 +119,9 @@ export default function MultiPhotoUpload({
             ) : (
               <>
                 <UploadCloud size={15} />
-                <span>Upload Multiple Photos</span>
+                <span>Upload Vehicle Photos</span>
               </>
             )}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleAddSampleAngles}
-            disabled={isUploading}
-            className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-semibold text-xs transition cursor-pointer"
-          >
-            <Camera size={13} className="text-[#4b6ba3]" />
-            <span>Add 4 Demo Angles</span>
           </button>
         </div>
 

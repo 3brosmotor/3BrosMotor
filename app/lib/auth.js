@@ -13,11 +13,43 @@ export const DEMO_ADMIN_CREDENTIALS = {
   password: 'admin123'
 };
 
+export const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 Hours Security Session
 const STORAGE_KEY = '3bros_admin_session_auth';
+const SESSION_EXPIRY_KEY = '3bros_admin_session_expiry';
 const USER_INFO_KEY = '3bros_admin_user_info';
 
 export function isFirebaseConfigured() {
   return Boolean(auth);
+}
+
+/**
+ * Record an authenticated session with an exact 24-hour expiration timestamp
+ */
+export function setAdminSession(userMetadata = {}) {
+  if (typeof window === 'undefined') return;
+  const expiresAt = Date.now() + SESSION_DURATION_MS;
+  localStorage.setItem(STORAGE_KEY, 'true');
+  localStorage.setItem(SESSION_EXPIRY_KEY, String(expiresAt));
+  if (userMetadata) {
+    localStorage.setItem(USER_INFO_KEY, JSON.stringify(userMetadata));
+  }
+}
+
+/**
+ * Get remaining hours left in the current 24-hour session
+ */
+export function getRemainingSessionHours() {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const expiryStr = localStorage.getItem(SESSION_EXPIRY_KEY);
+    if (!expiryStr) return 0;
+    const expiresAt = parseInt(expiryStr, 10);
+    const diffMs = expiresAt - Date.now();
+    if (diffMs <= 0) return 0;
+    return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60)));
+  } catch {
+    return 0;
+  }
 }
 
 /**
@@ -50,14 +82,29 @@ export function getFirebaseErrorMessage(errorCode) {
 }
 
 /**
- * Check if the admin is currently authenticated (either through Firebase or session cache)
+ * Check if the admin is currently authenticated with a valid (unexpired) 24-hour session
  */
 export function isUserAuthenticated() {
   if (typeof window === 'undefined') return false;
-  if (auth && auth.currentUser) return true;
   try {
     const session = localStorage.getItem(STORAGE_KEY);
-    return session === 'true';
+    if (session !== 'true') return false;
+
+    // Verify 24-hour session expiration
+    const expiryStr = localStorage.getItem(SESSION_EXPIRY_KEY);
+    if (expiryStr) {
+      const expiresAt = parseInt(expiryStr, 10);
+      if (Number.isNaN(expiresAt) || Date.now() >= expiresAt) {
+        // 24-hour session expired: clear credentials and require re-authentication
+        logoutAdmin();
+        return false;
+      }
+    } else {
+      // First session: initialize 24-hour timer from now
+      localStorage.setItem(SESSION_EXPIRY_KEY, String(Date.now() + SESSION_DURATION_MS));
+    }
+
+    return true;
   } catch {
     return false;
   }
@@ -106,14 +153,13 @@ export async function authenticateWithFirebaseEmail(email, password) {
       const user = userCredential.user;
 
       if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, 'true');
-        localStorage.setItem(USER_INFO_KEY, JSON.stringify({
+        setAdminSession({
           uid: user.uid,
           email: user.email,
           displayName: user.displayName || user.email?.split('@')[0] || 'Administrator',
           photoURL: user.photoURL,
           provider: 'firebase-email'
-        }));
+        });
       }
 
       return { success: true, user };
@@ -143,14 +189,13 @@ export async function authenticateWithFirebaseGoogle() {
     const user = result.user;
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, 'true');
-      localStorage.setItem(USER_INFO_KEY, JSON.stringify({
+      setAdminSession({
         uid: user.uid,
         email: user.email,
         displayName: user.displayName || 'Administrator',
         photoURL: user.photoURL,
         provider: 'google'
-      }));
+      });
     }
 
     return { success: true, user };
@@ -175,12 +220,11 @@ export function authenticateAdmin(userOrEmail, password) {
 
   if (validUser && validPass) {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, 'true');
-      localStorage.setItem(USER_INFO_KEY, JSON.stringify({
+      setAdminSession({
         email: DEMO_ADMIN_CREDENTIALS.email,
         displayName: 'Demo Administrator',
         provider: 'demo'
-      }));
+      });
     }
     return { success: true };
   }
@@ -205,6 +249,7 @@ export async function logoutAdmin() {
 
   if (typeof window !== 'undefined') {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(SESSION_EXPIRY_KEY);
     localStorage.removeItem(USER_INFO_KEY);
     localStorage.removeItem('3bros_admin_user');
   }
@@ -222,8 +267,20 @@ export function subscribeToAuthChanges(callback) {
 
   return onAuthStateChanged(auth, (user) => {
     if (user) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, 'true');
+      // Validate 24-hour expiration
+      if (!isUserAuthenticated()) {
+        logoutAdmin();
+        callback(null);
+        return;
+      }
+      if (typeof window !== 'undefined' && !localStorage.getItem(SESSION_EXPIRY_KEY)) {
+        setAdminSession({
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || user.email?.split('@')[0] || 'Administrator',
+          photoURL: user.photoURL,
+          provider: user.providerData?.[0]?.providerId || 'firebase'
+        });
       }
       callback({
         uid: user.uid,

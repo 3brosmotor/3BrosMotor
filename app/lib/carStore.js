@@ -1,13 +1,13 @@
 // 3BrosMotor Inventory Store
-// Real-time Firebase Firestore cloud sync with lean 5-car demo baseline
+// Production-Ready Real-time Firebase Firestore cloud sync (No demo auto-seeding in production)
 
 import { INITIAL_60_VEHICLES } from './carsData';
 import { db, handleFirestoreError, OperationType } from './firebase';
 import { collection, doc, setDoc, deleteDoc, getDocs, onSnapshot } from 'firebase/firestore';
 
-// 5 initial demo vehicles for preview until user inputs their own real fleet data
-export const DEMO_CARS = INITIAL_60_VEHICLES.slice(0, 5);
-export const FULL_60_CARS = DEMO_CARS;
+// 5 initial demo vehicles retained as empty baseline for production
+export const DEMO_CARS = [];
+export const FULL_60_CARS = [];
 
 const STORAGE_KEY = '3bros_inventory_vehicles';
 export const INVENTORY_EVENT = '3bros_inventory_updated';
@@ -17,7 +17,10 @@ let unsubscribeVehiclesListener = null;
 
 // Initialize real-time synchronization with Firestore
 export function initCarStoreSync() {
-  if (typeof window === 'undefined' || isFirestoreListenerAttached) return;
+  if (typeof window === 'undefined') return;
+  if (isFirestoreListenerAttached && unsubscribeVehiclesListener) {
+    return;
+  }
   isFirestoreListenerAttached = true;
 
   if (!db) return;
@@ -25,59 +28,83 @@ export function initCarStoreSync() {
   try {
     const vehiclesCol = collection(db, 'vehicles');
     
+    // Clean up any stale listener before attaching
+    if (typeof unsubscribeVehiclesListener === 'function') {
+      try { unsubscribeVehiclesListener(); } catch {}
+    }
+
     // Attach single onSnapshot listener
     unsubscribeVehiclesListener = onSnapshot(vehiclesCol, (snapshot) => {
       try {
         if (!snapshot.empty) {
           const remoteCars = [];
+          const demoMockModels = [
+            'Land Cruiser Prado', 
+            'Land Cruiser 79 Double Cab', 
+            'Canter 3.5 Ton Dump', 
+            'Harrier Elegance', 
+            'HiAce Commuter 15-Seater'
+          ];
+          const demoIds = ['1001', '1002', '1003', '1004', '1005'];
+          
           snapshot.forEach((docSnap) => {
-            remoteCars.push({ ...docSnap.data(), id: String(docSnap.id) });
+            const data = docSnap.data() || {};
+            const idStr = String(docSnap.id);
+            const isMockDemo = data.isDemo === true || (demoIds.includes(idStr) && demoMockModels.includes(data.model));
+            if (isMockDemo) {
+              deleteDoc(doc(db, 'vehicles', idStr)).catch(() => {});
+            } else {
+              remoteCars.push({ ...data, id: idStr });
+            }
           });
           
-          // Sort by stockNo or ID
+          // Merge with any local genuine cars not yet synced to Firestore
+          const localCurrent = getStoredCars();
+          const remoteIdSet = new Set(remoteCars.map(c => String(c.id)));
+          
+          for (const localCar of localCurrent) {
+            if (!remoteIdSet.has(String(localCar.id)) && !localCar.isDemo) {
+              remoteCars.unshift(localCar);
+              setDoc(doc(db, 'vehicles', String(localCar.id)), localCar, { merge: true }).catch(() => {});
+            }
+          }
+
+          // Sort by creation date or stockNo
           remoteCars.sort((a, b) => {
+            const timeA = new Date(a.createdAt || 0).getTime();
+            const timeB = new Date(b.createdAt || 0).getTime();
+            if (timeA && timeB && timeA !== timeB) return timeB - timeA;
             const numA = parseInt(String(a.stockNo || a.id).replace(/\D/g, ''), 10) || 0;
             const numB = parseInt(String(b.stockNo || b.id).replace(/\D/g, ''), 10) || 0;
             return numA - numB;
           });
 
-          // If Firestore currently holds the old 60-car test fleet, prune documents > 1005
-          if (remoteCars.length >= 30 && remoteCars.some(c => c.id === '1060')) {
-            remoteCars.forEach((car) => {
-              const idNum = parseInt(car.id, 10);
-              if (idNum > 1005 && idNum <= 1060) {
-                deleteDoc(doc(db, 'vehicles', String(car.id))).catch(() => {});
-              }
-            });
-            const pruned = remoteCars.filter(c => {
-              const idNum = parseInt(c.id, 10);
-              return !(idNum > 1005 && idNum <= 1060);
-            });
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(pruned.length > 0 ? pruned : DEMO_CARS));
-            window.dispatchEvent(new Event(INVENTORY_EVENT));
-            return;
-          }
-
           localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteCars));
           window.dispatchEvent(new Event(INVENTORY_EVENT));
         } else {
-          // If remote collection is currently empty in Firebase,
-          // seed only the 5 demo vehicles so visitors have an initial preview
-          const cached = getStoredCars();
-          const fleetToSeed = cached.length > 0 && cached.length <= 10 ? cached : DEMO_CARS;
-          fleetToSeed.forEach((vehicle) => {
-            setDoc(doc(db, 'vehicles', String(vehicle.id)), vehicle, { merge: true }).catch(() => {});
-          });
+          // If remote collection is newly empty, back up any real local cars to Firestore
+          const localCars = getStoredCars();
+          if (localCars.length > 0) {
+            localCars.forEach((c) => {
+              if (!c.isDemo) {
+                setDoc(doc(db, 'vehicles', String(c.id)), c, { merge: true }).catch(() => {});
+              }
+            });
+          } else {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+            window.dispatchEvent(new Event(INVENTORY_EVENT));
+          }
         }
-      } catch {
-        // Fallback safely to local inventory
+      } catch (e) {
+        console.error('Car store snapshot handling error:', e);
       }
     }, (error) => {
-      // Gracefully handle aborted, network, or permission errors
+      // Gracefully handle aborted, network, or superseded connection warnings
       const msg = error?.message || '';
       if (
         error?.name !== 'AbortError' &&
         !msg.includes('aborted') &&
+        !msg.includes('superseded') &&
         !msg.includes('fetch') &&
         !msg.includes('Failed to fetch') &&
         !msg.includes('network')
@@ -90,6 +117,7 @@ export function initCarStoreSync() {
     if (
       err?.name !== 'AbortError' &&
       !msg.includes('aborted') &&
+      !msg.includes('superseded') &&
       !msg.includes('fetch') &&
       !msg.includes('network')
     ) {
@@ -100,30 +128,37 @@ export function initCarStoreSync() {
 
 export function getStoredCars() {
   if (typeof window === 'undefined') {
-    return DEMO_CARS;
+    return [];
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_CARS));
-      return DEMO_CARS;
+      return [];
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      // Prune old 60-car test fleet if stored
-      const isOld60Fleet = parsed.length >= 30 && parsed.some(c => c.id === '1060');
-      if (isOld60Fleet) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_CARS));
-        return DEMO_CARS;
+      const demoMockModels = [
+        'Land Cruiser Prado', 
+        'Land Cruiser 79 Double Cab', 
+        'Canter 3.5 Ton Dump', 
+        'Harrier Elegance', 
+        'HiAce Commuter 15-Seater'
+      ];
+      const demoIds = ['1001', '1002', '1003', '1004', '1005'];
+      const realOnly = parsed.filter(c => {
+        if (!c) return false;
+        if (c.isDemo === true) return false;
+        if (demoIds.includes(String(c.id)) && demoMockModels.includes(c.model)) return false;
+        return true;
+      });
+      if (realOnly.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(realOnly));
       }
-      if (parsed.length > 0) {
-        return parsed;
-      }
+      return realOnly;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_CARS));
-    return DEMO_CARS;
+    return [];
   } catch {
-    return DEMO_CARS;
+    return [];
   }
 }
 
@@ -138,6 +173,33 @@ export function getCarImages(car) {
   return [];
 }
 
+/**
+ * Remove all remaining starter/demo vehicles (IDs 1001-1005) from cloud and local storage
+ */
+export async function clearAllDemoCars() {
+  if (typeof window === 'undefined') return;
+  try {
+    const current = getStoredCars();
+    const demoIds = ['1001', '1002', '1003', '1004', '1005'];
+    
+    // Purge from Firestore
+    if (db) {
+      for (const id of demoIds) {
+        try {
+          await deleteDoc(doc(db, 'vehicles', id));
+        } catch {}
+      }
+    }
+
+    const realCarsOnly = current.filter(c => !demoIds.includes(String(c.id)));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(realCarsOnly));
+    window.dispatchEvent(new Event(INVENTORY_EVENT));
+    return realCarsOnly;
+  } catch (err) {
+    console.error('Failed to clear demo cars:', err);
+  }
+}
+
 export async function saveCar(carData) {
   if (typeof window === 'undefined') return carData;
   try {
@@ -148,27 +210,36 @@ export async function saveCar(carData) {
       ? carData.images.filter(Boolean)
       : (carData.photo ? [carData.photo] : []);
     
-    const primaryPhoto = rawImages[0] || carData.photo || `https://picsum.photos/seed/${encodeURIComponent((carData.make || 'Car') + '-' + (carData.model || 'Auto'))}/800/600`;
-    const finalImages = rawImages.length > 0 ? rawImages : [primaryPhoto];
+    const primaryPhoto = rawImages[0] || carData.photo || '';
+    const finalImages = rawImages.length > 0 ? rawImages : (primaryPhoto ? [primaryPhoto] : []);
+
+    const carId = carData.id ? String(carData.id) : `car_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
     const newCar = {
       ...carData,
-      id: carData.id ? String(carData.id) : String(Date.now()).slice(-4),
+      id: carId,
       status: carData.status || 'In Stock',
       photo: primaryPhoto,
       images: finalImages,
       location: carData.location || 'Dar es Salaam Yard',
+      isDemo: false,
+      createdAt: carData.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    const updated = [newCar, ...current];
+
+    // Filter out any stale item with same id
+    const updated = [newCar, ...current.filter(c => String(c.id) !== carId)];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new Event(INVENTORY_EVENT));
 
-    // Save to Firestore so everyone sees the new car after deployment
-    try {
-      await setDoc(doc(db, 'vehicles', String(newCar.id)), newCar, { merge: true });
-    } catch (dbErr) {
-      handleFirestoreError(dbErr, OperationType.WRITE, `vehicles/${newCar.id}`);
+    // Save live to Firestore so every device sees the new vehicle
+    if (db) {
+      try {
+        await setDoc(doc(db, 'vehicles', carId), newCar, { merge: true });
+      } catch (dbErr) {
+        console.error('Firestore save vehicle error:', dbErr);
+        handleFirestoreError(dbErr, OperationType.WRITE, `vehicles/${carId}`);
+      }
     }
 
     return newCar;

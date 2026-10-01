@@ -98,16 +98,30 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    // Check initial authentication
+    // Check initial authentication with 24-hour expiry enforcement
     const authStatus = isUserAuthenticated();
     if (authStatus) {
       setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
     }
+
+    // Periodic 24-hour session validation (checks every 30 seconds & whenever browser tab regains focus)
+    const validateSession = () => {
+      if (!isUserAuthenticated()) {
+        setIsAuthenticated(false);
+      }
+    };
+
+    const sessionTimer = setInterval(validateSession, 30000);
+    window.addEventListener('focus', validateSession);
 
     // Subscribe to real-time Firebase Auth state updates
     const unsubscribeAuth = subscribeToAuthChanges((user) => {
-      if (user) {
+      if (user && isUserAuthenticated()) {
         setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
       }
     });
 
@@ -131,6 +145,8 @@ export default function AdminPage() {
     window.addEventListener(ADMIN_EVENT, handleAdminUpdate);
 
     return () => {
+      clearInterval(sessionTimer);
+      window.removeEventListener('focus', validateSession);
       if (typeof unsubscribeAuth === 'function') unsubscribeAuth();
       window.removeEventListener(INVENTORY_EVENT, handleInvUpdate);
       window.removeEventListener(ADMIN_EVENT, handleAdminUpdate);
@@ -436,6 +452,9 @@ export default function AdminPage() {
         isCollapsed={isSidebarCollapsed}
         setIsCollapsed={setIsSidebarCollapsed}
         vehicleCount={cars.length}
+        calendarCount={calendarEvents.length}
+        remindersCount={reminders.length}
+        notesCount={notes.length}
         onLogout={handleLogout}
         isMobileOpen={isMobileSidebarOpen}
         setIsMobileOpen={setIsMobileSidebarOpen}

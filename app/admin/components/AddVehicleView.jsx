@@ -56,8 +56,8 @@ export default function AddVehicleView({ onSaveCar, onCancel }) {
       ? formData.images.filter(Boolean)
       : (formData.photo ? [formData.photo.trim()] : []);
 
-    const primaryPhoto = rawImages[0] || formData.photo.trim() || `https://picsum.photos/seed/${encodeURIComponent(formData.make + '-' + formData.model + '-' + Date.now())}/800/600`;
-    const finalImages = rawImages.length > 0 ? rawImages : [primaryPhoto];
+    const primaryPhoto = rawImages[0] || formData.photo.trim() || '';
+    const finalImages = rawImages.length > 0 ? rawImages : (primaryPhoto ? [primaryPhoto] : []);
 
     const carData = {
       ...formData,
