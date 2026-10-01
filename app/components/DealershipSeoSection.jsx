@@ -28,7 +28,7 @@ const FAQS = [
   },
   {
     q: 'How do I import a vehicle from Japan through 3BrosMotor?',
-    a: 'Simply contact our sales team via WhatsApp (+255 693 100 680) with your vehicle preferences. We bid directly on your chosen vehicle at Japanese USS auctions, oversee maritime shipping to Dar es Salaam, process TRA customs clearance, and deliver the vehicle road-ready.'
+    a: `Simply contact our sales team via WhatsApp (+255 671 361 160 or +255 693 100 680) with your vehicle preferences. We bid directly on your chosen vehicle at Japanese USS auctions, oversee maritime shipping to Dar es Salaam, process TRA customs clearance, and deliver the vehicle road-ready.`
   },
   {
     q: 'What payment methods does 3BrosMotor accept?',
@@ -64,7 +64,7 @@ export default function DealershipSeoSection() {
     <section 
       id="dealership-authority-seo" 
       aria-label="Dealership Information & FAQ"
-      className="container mx-auto max-w-310 px-3 my-10"
+      className="container mx-auto max-w-[1240px] px-3 my-10"
     >
       {/* 4 Pillars of Excellence */}
       <div className="bg-gradient-to-r from-[#213555] via-[#4b6ba3] to-[#213555] text-white p-6 sm:p-8 rounded-lg shadow-md mb-8">
