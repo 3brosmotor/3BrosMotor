@@ -1,5 +1,5 @@
 // 3BrosMotor Inventory Store
-// Production-Ready Real-time Firebase Firestore cloud sync (No demo auto-seeding in production)
+// Production-Ready Real-time Firebase Firestore cloud sync
 
 import { INITIAL_60_VEHICLES } from './carsData';
 import { db, handleFirestoreError, OperationType } from './firebase';

@@ -1,5 +1,5 @@
 // 3BrosMotor Dealership Admin Data Store
-// Manages Expenses, Sales, Calendar Events, Reminders, Notes, and Settings with Firebase Firestore Cloud Sync
+// Manages Expenses, Sales, Calendar Events, Reminders, Notes, and Setting with Firebase Firestore Cloud Sync
 
 import { db, handleFirestoreError, OperationType } from './firebase';
 import { doc, getDoc, setDoc, deleteDoc, onSnapshot, collection } from 'firebase/firestore';

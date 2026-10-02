@@ -3,7 +3,7 @@ import { initializeFirestore, getFirestore, setLogLevel as setFirestoreLogLevel 
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
-// Silence verbose Firebase and Firestore internal connectivity logs
+// Silence verbose Firebase and Firestore internal connectivity log
 try {
   setLogLevel('silent');
 } catch {}

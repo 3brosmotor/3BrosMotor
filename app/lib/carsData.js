@@ -1,4 +1,4 @@
-// 3BrosMotor Dealership Inventory Baseline
+// 3BrosMotor Dealership Inventory 
 // Production-Ready: Starts clean with 0 mock vehicles. Real fleet is entered via Admin Portal.
 
 export const INITIAL_60_VEHICLES = [];
