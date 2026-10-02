@@ -141,8 +141,9 @@ export default function AdminPage() {
     updateCar(carData);
   };
 
-  const handleDeleteCar = (id) => {
-    deleteCar(id);
+  const handleDeleteCar = async (id) => {
+    setCars(prev => prev.filter(c => String(c.id) !== String(id)));
+    await deleteCar(id);
   };
 
   const handleMarkSold = (car) => {

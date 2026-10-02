@@ -3,7 +3,7 @@ import { initializeFirestore, getFirestore, setLogLevel as setFirestoreLogLevel 
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
-// Silence verbose Firebase and Firestore internal connectivity log
+// Silence verbose Firebase and Firestore internal connectivity logs
 try {
   setLogLevel('silent');
 } catch {}
@@ -26,9 +26,9 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 let firestoreInstance;
 try {
-  // Use HTTP long polling to prevent WebSocket/streaming issues in proxied/cloud environments
+  // Use auto-detect long polling for fast streaming writes while retaining fallback resilience
   firestoreInstance = initializeFirestore(app, {
-    experimentalForceLongPolling: true,
+    experimentalAutoDetectLongPolling: true,
     ignoreUndefinedProperties: true
   });
 } catch {

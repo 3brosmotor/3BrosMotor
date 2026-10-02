@@ -36,6 +36,7 @@ export default function VehiclesView({
   const [syncStatus, setSyncStatus] = useState(null); // { type: 'success' | 'warning' | 'error', message: string, details?: string }
   const [carToDelete, setCarToDelete] = useState(null);
   const [deleteToast, setDeleteToast] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const demoCarsList = cars.filter(c => ['1001', '1002', '1003', '1004', '1005'].includes(String(c.id)));
   const hasDemoCars = demoCarsList.length > 0;
@@ -592,11 +593,16 @@ export default function VehiclesView({
               <button
                 type="button"
                 onClick={() => {
+                  if (!carToDelete) return;
                   const carName = `${carToDelete.year} ${carToDelete.make} ${carToDelete.model}`;
-                  onDeleteCar(carToDelete.id);
+                  const idToDelete = carToDelete.id;
+                  // Instant response: close modal and update table immediately (0ms delay)
                   setCarToDelete(null);
-                  setDeleteToast(`"${carName}" was permanently deleted from the database.`);
+                  setDeleteToast(`"${carName}" was permanently deleted.`);
                   setTimeout(() => setDeleteToast(''), 4500);
+                  if (typeof onDeleteCar === 'function') {
+                    onDeleteCar(idToDelete);
+                  }
                 }}
                 className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
               >

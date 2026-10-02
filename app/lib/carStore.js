@@ -1,5 +1,5 @@
 // 3BrosMotor Inventory Store
-// Production-Ready Real-time Firebase Firestore cloud sync
+// Production-Ready Real-time Firebase Firestore cloud sync (No demo auto-seeding in production)
 
 import { INITIAL_60_VEHICLES } from './carsData';
 import { db, handleFirestoreError, OperationType } from './firebase';
@@ -10,10 +10,39 @@ export const DEMO_CARS = [];
 export const FULL_60_CARS = [];
 
 const STORAGE_KEY = '3bros_inventory_vehicles';
+const DELETED_IDS_STORAGE_KEY = '3bros_deleted_car_ids';
 export const INVENTORY_EVENT = '3bros_inventory_updated';
 
 let isFirestoreListenerAttached = false;
 let unsubscribeVehiclesListener = null;
+
+export function getDeletedCarIds() {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem(DELETED_IDS_STORAGE_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+export function markCarAsDeleted(id) {
+  if (typeof window === 'undefined' || !id) return;
+  try {
+    const currentSet = getDeletedCarIds();
+    currentSet.add(String(id));
+    localStorage.setItem(DELETED_IDS_STORAGE_KEY, JSON.stringify(Array.from(currentSet)));
+  } catch {}
+}
+
+export function unmarkCarAsDeleted(id) {
+  if (typeof window === 'undefined' || !id) return;
+  try {
+    const currentSet = getDeletedCarIds();
+    currentSet.delete(String(id));
+    localStorage.setItem(DELETED_IDS_STORAGE_KEY, JSON.stringify(Array.from(currentSet)));
+  } catch {}
+}
 
 // Initialize real-time synchronization with Firestore
 export function initCarStoreSync() {
@@ -36,6 +65,8 @@ export function initCarStoreSync() {
     // Attach single onSnapshot listener
     unsubscribeVehiclesListener = onSnapshot(vehiclesCol, (snapshot) => {
       try {
+        const deletedIds = getDeletedCarIds();
+
         if (!snapshot.empty) {
           const remoteCars = [];
           const demoMockModels = [
@@ -51,23 +82,14 @@ export function initCarStoreSync() {
             const data = docSnap.data() || {};
             const idStr = String(docSnap.id);
             const isMockDemo = data.isDemo === true || (demoIds.includes(idStr) && demoMockModels.includes(data.model));
-            if (isMockDemo) {
+            
+            // If marked as deleted or mock demo, permanently purge from Firestore and do not add to inventory
+            if (deletedIds.has(idStr) || isMockDemo) {
               deleteDoc(doc(db, 'vehicles', idStr)).catch(() => {});
             } else {
               remoteCars.push({ ...data, id: idStr });
             }
           });
-          
-          // Merge with any local genuine cars not yet synced to Firestore
-          const localCurrent = getStoredCars();
-          const remoteIdSet = new Set(remoteCars.map(c => String(c.id)));
-          
-          for (const localCar of localCurrent) {
-            if (!remoteIdSet.has(String(localCar.id)) && !localCar.isDemo) {
-              remoteCars.unshift(localCar);
-              setDoc(doc(db, 'vehicles', String(localCar.id)), localCar, { merge: true }).catch(() => {});
-            }
-          }
 
           // Sort by creation date or stockNo
           remoteCars.sort((a, b) => {
@@ -82,18 +104,8 @@ export function initCarStoreSync() {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteCars));
           window.dispatchEvent(new Event(INVENTORY_EVENT));
         } else {
-          // If remote collection is newly empty, back up any real local cars to Firestore
-          const localCars = getStoredCars();
-          if (localCars.length > 0) {
-            localCars.forEach((c) => {
-              if (!c.isDemo) {
-                setDoc(doc(db, 'vehicles', String(c.id)), c, { merge: true }).catch(() => {});
-              }
-            });
-          } else {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-            window.dispatchEvent(new Event(INVENTORY_EVENT));
-          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+          window.dispatchEvent(new Event(INVENTORY_EVENT));
         }
       } catch (e) {
         console.error('Car store snapshot handling error:', e);
@@ -153,9 +165,11 @@ export function getStoredCars() {
         'HiAce Commuter 15-Seater'
       ];
       const demoIds = ['1001', '1002', '1003', '1004', '1005'];
+      const deletedIds = getDeletedCarIds();
       const realOnly = parsed.filter(c => {
         if (!c) return false;
         if (c.isDemo === true) return false;
+        if (deletedIds.has(String(c.id))) return false;
         if (demoIds.includes(String(c.id)) && demoMockModels.includes(c.model)) return false;
         return true;
       });
@@ -222,6 +236,7 @@ export async function saveCar(carData) {
     const finalImages = rawImages.length > 0 ? rawImages : (primaryPhoto ? [primaryPhoto] : []);
 
     const carId = carData.id ? String(carData.id) : `car_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    unmarkCarAsDeleted(carId);
 
     const newCar = {
       ...carData,
@@ -296,18 +311,25 @@ export async function updateCar(updatedCar) {
 }
 
 export async function deleteCar(id) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || !id) return;
+  const targetId = String(id);
   try {
+    // 1. Mark permanently as deleted in blacklist so it can never be resurrected
+    markCarAsDeleted(targetId);
+
+    // 2. Remove from local storage inventory immediately
     const current = getStoredCars();
-    const updated = current.filter(c => String(c.id) !== String(id));
+    const updated = current.filter(c => String(c.id) !== targetId);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new Event(INVENTORY_EVENT));
 
-    // Delete in Firestore
-    try {
-      await deleteDoc(doc(db, 'vehicles', String(id)));
-    } catch (dbErr) {
-      handleFirestoreError(dbErr, OperationType.DELETE, `vehicles/${id}`);
+    // 3. Delete from Firestore cloud database
+    if (db) {
+      try {
+        await deleteDoc(doc(db, 'vehicles', targetId));
+      } catch (dbErr) {
+        handleFirestoreError(dbErr, OperationType.DELETE, `vehicles/${targetId}`);
+      }
     }
   } catch (err) {
     console.error('Failed to delete car:', err);
