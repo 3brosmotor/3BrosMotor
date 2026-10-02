@@ -102,6 +102,9 @@ export default function AdminPage() {
     const authStatus = isUserAuthenticated();
     if (authStatus) {
       setIsAuthenticated(true);
+      initCarStoreSync();
+      initAdminStoreSync();
+      refreshAllData();
     } else {
       setIsAuthenticated(false);
     }
@@ -120,15 +123,15 @@ export default function AdminPage() {
     const unsubscribeAuth = subscribeToAuthChanges((user) => {
       if (user && isUserAuthenticated()) {
         setIsAuthenticated(true);
+        initCarStoreSync();
+        initAdminStoreSync();
+        refreshAllData();
       } else {
         setIsAuthenticated(false);
       }
     });
 
     setIsCheckingAuth(false);
-    initCarStoreSync();
-    initAdminStoreSync();
-    refreshAllData();
 
     // Listen to inventory and admin store updates
     const handleInvUpdate = () => setCars(getStoredCars());
