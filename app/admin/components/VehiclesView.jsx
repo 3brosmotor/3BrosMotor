@@ -34,6 +34,8 @@ export default function VehiclesView({
   const [selectedLocation, setSelectedLocation] = useState('ALL');
   const [editingCar, setEditingCar] = useState(null);
   const [syncStatus, setSyncStatus] = useState(null); // { type: 'success' | 'warning' | 'error', message: string, details?: string }
+  const [carToDelete, setCarToDelete] = useState(null);
+  const [deleteToast, setDeleteToast] = useState('');
 
   const demoCarsList = cars.filter(c => ['1001', '1002', '1003', '1004', '1005'].includes(String(c.id)));
   const hasDemoCars = demoCarsList.length > 0;
@@ -94,6 +96,23 @@ export default function VehiclesView({
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Delete Feedback Toast */}
+      {deleteToast && (
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs px-4 py-3 rounded-lg flex items-center justify-between shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0" />
+            <span className="font-semibold">{deleteToast}</span>
+          </div>
+          <button 
+            type="button"
+            onClick={() => setDeleteToast('')}
+            className="text-emerald-600 hover:text-emerald-900 cursor-pointer"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
       {/* Cloud Sync Diagnostic Banner */}
       {syncStatus && (
         <div className={`p-4 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${
@@ -274,9 +293,9 @@ export default function VehiclesView({
 
                 <button
                   type="button"
-                  onClick={() => onDeleteCar(car.id, `${car.year} ${car.make} ${car.model}`)}
-                  className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition flex items-center justify-center"
-                  title="Delete from Stock"
+                  onClick={() => setCarToDelete(car)}
+                  className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition flex items-center justify-center cursor-pointer"
+                  title="Delete Vehicle"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -393,8 +412,8 @@ export default function VehiclesView({
 
                         <button
                           type="button"
-                          onClick={() => onDeleteCar(car.id, `${car.year} ${car.make} ${car.model}`)}
-                          title="Delete from Stock"
+                          onClick={() => setCarToDelete(car)}
+                          title="Delete Vehicle"
                           className="p-1 rounded text-gray-600 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
                         >
                           <Trash2 size={15} />
@@ -492,22 +511,99 @@ export default function VehiclesView({
                 />
               </div>
 
-              <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
                 <button
                   type="button"
-                  onClick={() => setEditingCar(null)}
-                  className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50"
+                  onClick={() => {
+                    const toDel = editingCar;
+                    setEditingCar(null);
+                    setCarToDelete(toDel);
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-red-600 hover:text-red-800 hover:bg-red-50 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
                 >
-                  Cancel
+                  <Trash2 size={14} />
+                  <span>Delete Vehicle</span>
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-lg bg-[#4b6ba3] hover:bg-blue-800 text-white font-bold"
-                >
-                  Save Changes
-                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingCar(null)}
+                    className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 text-xs cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-lg bg-[#4b6ba3] hover:bg-blue-800 text-white font-bold text-xs cursor-pointer"
+                  >
+                    Save Changes
+                  </button>
+                </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* IN-APP DELETE CONFIRMATION MODAL */}
+      {carToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-md w-full p-5 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
+              <Trash2 size={24} />
+            </div>
+            <h4 className="text-base font-bold text-gray-900 mb-1">Delete Vehicle Permanently?</h4>
+            <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+              Are you sure you want to remove <strong className="text-gray-900">{carToDelete.year} {carToDelete.make} {carToDelete.model}</strong>?
+              This will permanently delete the vehicle from active stock and erase its record from the cloud database.
+            </p>
+
+            {/* Vehicle Card Preview */}
+            <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 mb-5 flex items-center gap-3 text-left">
+              <div className="w-14 h-11 rounded-lg overflow-hidden relative bg-gray-200 flex-shrink-0 border border-gray-300">
+                <Image
+                  src={carToDelete.photo || (Array.isArray(carToDelete.images) && carToDelete.images[0]) || ''}
+                  alt={carToDelete.model || 'Vehicle'}
+                  fill
+                  className="object-cover"
+                  referrerPolicy="no-referrer"
+                  unoptimized={typeof carToDelete.photo === 'string' && (carToDelete.photo.startsWith('data:') || carToDelete.photo.startsWith('blob:'))}
+                />
+              </div>
+              <div className="text-xs flex-1 min-w-0">
+                <div className="font-bold text-gray-900 truncate">
+                  {carToDelete.year} {carToDelete.make} {carToDelete.model}
+                </div>
+                <div className="text-gray-500 text-[11px] font-mono truncate">
+                  Chassis: {carToDelete.chassis || 'N/A'} • ${Number(String(carToDelete.price).replace(/[^0-9]/g, '')).toLocaleString()}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setCarToDelete(null)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const carName = `${carToDelete.year} ${carToDelete.make} ${carToDelete.model}`;
+                  onDeleteCar(carToDelete.id);
+                  setCarToDelete(null);
+                  setDeleteToast(`"${carName}" was permanently deleted from the database.`);
+                  setTimeout(() => setDeleteToast(''), 4500);
+                }}
+                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+              >
+                <Trash2 size={13} />
+                <span>Yes, Delete Vehicle</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

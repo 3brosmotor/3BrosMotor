@@ -141,10 +141,8 @@ export default function AdminPage() {
     updateCar(carData);
   };
 
-  const handleDeleteCar = (id, carName) => {
-    if (confirm(`Are you sure you want to remove ${carName || 'this vehicle'} from active stock?`)) {
-      deleteCar(id);
-    }
+  const handleDeleteCar = (id) => {
+    deleteCar(id);
   };
 
   const handleMarkSold = (car) => {
