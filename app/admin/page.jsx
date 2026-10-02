@@ -3,383 +3,484 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Logo from '../../components/Logo';
-import { 
-  DEMO_ADMIN_CREDENTIALS, 
-  authenticateWithFirebaseEmail, 
-  authenticateWithFirebaseGoogle, 
-  authenticateAdmin,
-  isUserAuthenticated, 
-  logoutAdmin,
-  isFirebaseConfigured,
-  getAdminUser
-} from '../../lib/auth';
-import { firebaseConfig } from '../../lib/firebase';
-import { 
-  Lock, 
-  ShieldCheck, 
-  AlertCircle, 
-  Key, 
-  ArrowRight, 
-  LogOut, 
-  HelpCircle, 
-  Check, 
-  Loader2,
-  ExternalLink,
-  ChevronDown,
-  ChevronUp
-} from 'lucide-react';
-import { PRIMARY_PHONE, SECONDARY_PHONE } from '../../lib/contactConfig';
+import Logo from '../components/Logo';
+import AdminSidebar from './components/AdminSidebar';
+import AdminHeader from './components/AdminHeader';
+import DashboardView from './components/DashboardView';
+import AddVehicleView from './components/AddVehicleView';
+import VehiclesView from './components/VehiclesView';
+import SoldVehiclesView from './components/SoldVehiclesView';
+import ExpensesView from './components/ExpensesView';
+import VehiclesManagementView from './components/VehiclesManagementView';
+import CalendarView from './components/CalendarView';
+import RemindersView from './components/RemindersView';
+import NotesView from './components/NotesView';
+import DocumentsView from './components/DocumentsView';
+import SettingsView from './components/SettingsView';
 
-export default function AdminLogin() {
+import { 
+  getStoredCars, 
+  saveCar, 
+  updateCar, 
+  deleteCar, 
+  INVENTORY_EVENT,
+  initCarStoreSync
+} from '../lib/carStore';
+
+import {
+  getExpenses,
+  addExpense,
+  deleteExpense,
+  getSoldVehicles,
+  addSoldVehicle,
+  updateSoldVehicle,
+  deleteSoldVehicle,
+  getCalendarEvents,
+  addCalendarEvent,
+  deleteCalendarEvent,
+  getReminders,
+  toggleReminder,
+  addReminder,
+  deleteReminder,
+  getNotes,
+  addNote,
+  deleteNote,
+  getDealershipSettings,
+  initAdminStoreSync,
+  ADMIN_EVENT
+} from '../lib/adminStore';
+
+import { 
+  isUserAuthenticated, 
+  authenticateAdmin, 
+  authenticateWithFirebaseEmail, 
+  authenticateWithFirebaseGoogle,
+  logoutAdmin, 
+  subscribeToAuthChanges,
+  getAdminUser,
+  DEMO_ADMIN_CREDENTIALS 
+} from '../lib/auth';
+import { ShieldCheck, LogIn, Lock, CheckCircle2, Car } from 'lucide-react';
+
+export default function AdminPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [alreadyLoggedIn, setAlreadyLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [showFirebaseGuide, setShowFirebaseGuide] = useState(false);
-  const [firebaseActive, setFirebaseActive] = useState(false);
+
+  // Authentication & Layout States
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Core Data States
+  const [cars, setCars] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [soldList, setSoldList] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [reminders, setReminders] = useState([]);
+  const [notes, setNotes] = useState([]);
+  const [adminSettings, setAdminSettings] = useState(() => getDealershipSettings());
+
+  // Login form state (if unauthenticated fallback)
+  const [loginUsername, setLoginUsername] = useState('admin');
+  const [loginPassword, setLoginPassword] = useState('admin123');
+  const [loginError, setLoginError] = useState('');
+
+  // Load all admin data
+  const refreshAllData = () => {
+    setCars(getStoredCars());
+    setExpenses(getExpenses());
+    setSoldList(getSoldVehicles());
+    setCalendarEvents(getCalendarEvents());
+    setReminders(getReminders());
+    setNotes(getNotes());
+    setAdminSettings(getDealershipSettings());
+  };
 
   useEffect(() => {
-    setFirebaseActive(isFirebaseConfigured());
-    if (isUserAuthenticated()) {
-      setAlreadyLoggedIn(true);
-      setCurrentUser(getAdminUser());
+    // Check initial authentication with 24-hour expiry enforcement
+    const authStatus = isUserAuthenticated();
+    if (authStatus) {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
     }
+
+    // Periodic 24-hour session validation (checks every 30 seconds & whenever browser tab regains focus)
+    const validateSession = () => {
+      if (!isUserAuthenticated()) {
+        setIsAuthenticated(false);
+      }
+    };
+
+    const sessionTimer = setInterval(validateSession, 30000);
+    window.addEventListener('focus', validateSession);
+
+    // Subscribe to real-time Firebase Auth state updates
+    const unsubscribeAuth = subscribeToAuthChanges((user) => {
+      if (user && isUserAuthenticated()) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+    });
+
+    setIsCheckingAuth(false);
+    initCarStoreSync();
+    initAdminStoreSync();
+    refreshAllData();
+
+    // Listen to inventory and admin store updates
+    const handleInvUpdate = () => setCars(getStoredCars());
+    const handleAdminUpdate = () => {
+      setExpenses(getExpenses());
+      setSoldList(getSoldVehicles());
+      setCalendarEvents(getCalendarEvents());
+      setReminders(getReminders());
+      setNotes(getNotes());
+      setAdminSettings(getDealershipSettings());
+    };
+
+    window.addEventListener(INVENTORY_EVENT, handleInvUpdate);
+    window.addEventListener(ADMIN_EVENT, handleAdminUpdate);
+
+    return () => {
+      clearInterval(sessionTimer);
+      window.removeEventListener('focus', validateSession);
+      if (typeof unsubscribeAuth === 'function') unsubscribeAuth();
+      window.removeEventListener(INVENTORY_EVENT, handleInvUpdate);
+      window.removeEventListener(ADMIN_EVENT, handleAdminUpdate);
+    };
   }, []);
 
-  const handleFillDemo = () => {
-    setEmail(DEMO_ADMIN_CREDENTIALS.email);
-    setPassword(DEMO_ADMIN_CREDENTIALS.password);
-    setError('');
+  // Handlers for Inventory
+  const handleSaveNewCar = (carData) => {
+    saveCar(carData);
+    setActiveTab('vehicles');
   };
 
-  const handleEmailSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+  const handleUpdateCar = (carData) => {
+    updateCar(carData);
+  };
 
-    try {
-      const res = await authenticateWithFirebaseEmail(email, password);
-      if (res.success) {
-        setIsSuccess(true);
-        setTimeout(() => {
-          router.push('/admin');
-        }, 600);
-      } else {
-        // If Firebase error is that operation is not allowed or user not found, also offer fallback check
-        setError(res.error || 'Authentication failed. Please check credentials.');
-      }
-    } catch (err) {
-      setError(err?.message || 'Unexpected login error.');
-    } finally {
-      setIsLoading(false);
+  const handleDeleteCar = (id, carName) => {
+    if (confirm(`Are you sure you want to remove ${carName || 'this vehicle'} from active stock?`)) {
+      deleteCar(id);
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setError('');
-    setIsLoading(true);
+  const handleMarkSold = (car) => {
+    const salePrice = Number(String(car.price).replace(/[^0-9]/g, '')) || 25000;
+    const purchaseCost = Math.round(salePrice * 0.82);
+    
+    addSoldVehicle({
+      carId: car.id,
+      make: car.make,
+      model: car.model,
+      year: car.year,
+      chassis: car.chassis,
+      customerName: 'Showroom Client',
+      customerPhone: '+255 7XX XXX XXX',
+      salePrice: salePrice,
+      purchaseCost: purchaseCost,
+      profit: salePrice - purchaseCost,
+      saleDate: new Date().toISOString().split('T')[0],
+      paymentMethod: 'Bank Transfer'
+    });
 
-    try {
-      const res = await authenticateWithFirebaseGoogle();
-      if (res.success) {
-        setIsSuccess(true);
-        setTimeout(() => {
-          router.push('/admin');
-        }, 600);
-      } else {
-        setError(res.error || 'Google Sign-In failed.');
-      }
-    } catch (err) {
-      setError(err?.message || 'Google Sign-In encountered an error.');
-    } finally {
-      setIsLoading(false);
-    }
+    deleteCar(car.id);
+    setActiveTab('sold-vehicles');
   };
 
-  const handleLogoutExisting = async () => {
+  // Handlers for Expenses
+  const handleAddExpense = (expenseData) => {
+    addExpense(expenseData);
+  };
+
+  const handleDeleteExpense = (id) => {
+    deleteExpense(id);
+  };
+
+  // Handlers for Sales
+  const handleAddSold = (saleData) => {
+    addSoldVehicle(saleData);
+  };
+
+  const handleUpdateSold = (saleData) => {
+    updateSoldVehicle(saleData);
+  };
+
+  const handleDeleteSold = (id) => {
+    deleteSoldVehicle(id);
+  };
+
+  // Handlers for Calendar
+  const handleAddEvent = (evtData) => {
+    addCalendarEvent(evtData);
+  };
+
+  const handleDeleteEvent = (id) => {
+    deleteCalendarEvent(id);
+  };
+
+  // Handlers for Reminders
+  const handleToggleReminder = (id) => {
+    toggleReminder(id);
+  };
+
+  const handleAddReminder = (remData) => {
+    addReminder(remData);
+  };
+
+  const handleDeleteReminder = (id) => {
+    deleteReminder(id);
+  };
+
+  // Handlers for Notes
+  const handleAddNote = (noteData) => {
+    addNote(noteData);
+  };
+
+  const handleDeleteNote = (id) => {
+    deleteNote(id);
+  };
+
+  // Logout Handler
+  const handleLogout = async () => {
     await logoutAdmin();
-    setAlreadyLoggedIn(false);
-    setCurrentUser(null);
-    setEmail('');
-    setPassword('');
+    setIsAuthenticated(false);
+  };
+
+  // Handle Manual Login
+  const handleManualLogin = async (e) => {
+    e.preventDefault();
+    setLoginError('');
+    const res = await authenticateWithFirebaseEmail(loginUsername, loginPassword);
+    if (res.success) {
+      setIsAuthenticated(true);
+      refreshAllData();
+    } else {
+      setLoginError(res.error || 'Authentication failed');
+    }
+  };
+
+  // If loading or unauthenticated
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-[#f4f6f9] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[#3e68f3] border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-xs font-semibold text-gray-500">Loading 3BrosMotor .LTD Dealership Portal...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If logged out, render clean login card
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#f4f6f9] flex items-center justify-center p-4 font-sans">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 max-w-md w-full">
+          <div className="text-center mb-6">
+            <div className="flex justify-center mb-3">
+              <Logo width={230} height={72} variant="light" />
+            </div>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">3BrosMotor .LTD</h1>
+            <p className="text-xs text-gray-500 mt-1">Authorized Dealership Management Portal</p>
+          </div>
+
+          {loginError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">
+              {loginError}
+            </div>
+          )}
+
+          <form onSubmit={handleManualLogin} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-bold text-gray-700 mb-1">Email</label>
+              <input
+                type="email"
+                required
+                value={loginUsername}
+                onChange={(e) => setLoginUsername(e.target.value)}
+                className="w-full border border-gray-300 p-2.5 rounded-lg outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                placeholder="admin@3brosmotor.com"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-gray-700 mb-1">Password</label>
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                className="w-full border border-gray-300 p-2.5 rounded-lg"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-[#111827] hover:bg-black text-white font-bold py-3 rounded-lg text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+            >
+              <LogIn size={16} />
+              <span>Sign In</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Active Main Content View Switcher
+  const renderMainContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return (
+          <DashboardView
+            cars={cars}
+            setActiveTab={setActiveTab}
+            expensesCount={expenses.length}
+            salesCount={soldList.length}
+            purchasesCount={0}
+          />
+        );
+
+      case 'add-vehicle':
+        return (
+          <AddVehicleView
+            onSaveCar={handleSaveNewCar}
+            onCancel={() => setActiveTab('dashboard')}
+          />
+        );
+
+      case 'vehicles':
+        return (
+          <VehiclesView
+            cars={cars}
+            onDeleteCar={handleDeleteCar}
+            onUpdateCar={handleUpdateCar}
+            onMarkSold={handleMarkSold}
+            onAddNew={() => setActiveTab('add-vehicle')}
+          />
+        );
+
+      case 'sold-vehicles':
+        return (
+          <SoldVehiclesView
+            soldList={soldList}
+            onAddSold={handleAddSold}
+            onUpdateSold={handleUpdateSold}
+            onDeleteSold={handleDeleteSold}
+          />
+        );
+
+      case 'expenses':
+        return (
+          <ExpensesView
+            expensesList={expenses}
+            onAddExpense={handleAddExpense}
+            onDeleteExpense={handleDeleteExpense}
+          />
+        );
+
+      case 'management':
+        return (
+          <VehiclesManagementView
+            cars={cars}
+            onUpdateCar={handleUpdateCar}
+          />
+        );
+
+      case 'calendar':
+        return (
+          <CalendarView
+            events={calendarEvents}
+            onAddEvent={handleAddEvent}
+            onDeleteEvent={handleDeleteEvent}
+          />
+        );
+
+      case 'reminders':
+        return (
+          <RemindersView
+            reminders={reminders}
+            onToggleReminder={handleToggleReminder}
+            onAddReminder={handleAddReminder}
+            onDeleteReminder={handleDeleteReminder}
+          />
+        );
+
+      case 'notes':
+        return (
+          <NotesView
+            notes={notes}
+            onAddNote={handleAddNote}
+            onDeleteNote={handleDeleteNote}
+          />
+        );
+
+      case 'documents':
+        return <DocumentsView />;
+
+      case 'settings':
+      case 'settings-makes':
+      case 'settings-bodytypes':
+      case 'settings-locations':
+      case 'settings-currency':
+        return <SettingsView subTab={activeTab} />;
+
+      default:
+        return (
+          <DashboardView
+            cars={cars}
+            setActiveTab={setActiveTab}
+            expensesCount={expenses.length}
+            salesCount={soldList.length}
+            purchasesCount={0}
+          />
+        );
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-between font-sans">
-      <div>
-        {/* Top bar */}
-        <div className="bg-black text-white py-1 text-xs">
-          <div className="container mx-auto max-w-[1240px] px-3 flex flex-wrap justify-between items-center font-bold gap-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="flex items-center gap-1">
-                <a href={PRIMARY_PHONE.tel} className="hover:text-yellow-300 transition">{PRIMARY_PHONE.display}</a>
-                <a href={PRIMARY_PHONE.whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 ml-0.5" title="WhatsApp">💬</a>
-              </span>
-              <span className="text-gray-600 hidden sm:inline">|</span>
-              <span className="flex items-center gap-1">
-                <a href={SECONDARY_PHONE.tel} className="hover:text-yellow-300 transition">{SECONDARY_PHONE.display}</a>
-                <a href={SECONDARY_PHONE.whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 ml-0.5" title="WhatsApp">💬</a>
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link href="/contact" className="text-gray-300 hover:text-white">
-                Contact Page
-              </Link>
-              <Link href="/" className="text-yellow-400 hover:underline">
-                &larr; Back to Public Inventory
-              </Link>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#f4f6f9] text-gray-900 font-sans flex">
+      {/* 1. Left Sidebar Navigation matching screenshot */}
+      <AdminSidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isCollapsed={isSidebarCollapsed}
+        setIsCollapsed={setIsSidebarCollapsed}
+        vehicleCount={cars.length}
+        calendarCount={calendarEvents.length}
+        remindersCount={reminders.length}
+        notesCount={notes.length}
+        onLogout={handleLogout}
+        isMobileOpen={isMobileSidebarOpen}
+        setIsMobileOpen={setIsMobileSidebarOpen}
+      />
+
+      {/* 2. Main Content Canvas */}
+      <div 
+        className={`flex-1 flex flex-col transition-all duration-300 min-w-0 ${
+          isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+        }`}
+      >
+        {/* Top Header bar with greeting "Hi, Hammad Riaz", mobile menu, fullscreen, globe, avatar */}
+        <div className="sticky top-0 z-30 bg-[#f4f6f9]/80 backdrop-blur-md border-b border-gray-200/60">
+          <AdminHeader
+            adminName={adminSettings?.directorName || "Hammad Riaz"}
+            adminAvatar={adminSettings?.adminAvatar}
+            onLogout={handleLogout}
+            onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+          />
         </div>
 
-        {/* Header */}
-        <header className="bg-[#4b6ba3] py-3 border-b-2 border-[#3c5683]">
-          <div className="container mx-auto max-w-[1240px] px-3 flex justify-between items-center">
-            <Link href="/">
-              <Logo width={220} height={66} />
-            </Link>
-            <div className="flex items-center gap-2">
-              <span className="text-white text-xs font-semibold uppercase tracking-wider bg-black/20 px-3 py-1 rounded flex items-center gap-1.5">
-                <Lock size={12} /> Dealer Admin Portal
-              </span>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Section */}
-        <div className="container mx-auto max-w-[1240px] px-3 py-8 flex flex-col items-center justify-center">
-          
-          <div className="bg-white border border-gray-300 rounded-sm shadow-md w-full max-w-md p-6">
-            
-            <div className="text-center mb-5">
-              <div className="flex justify-center mb-2">
-                <Logo width={220} height={66} variant="light" />
-              </div>
-              <h2 className="text-xl font-bold text-gray-900 tracking-tight">3BrosMotor .LTD</h2>
-              <p className="text-xs text-gray-500 mt-1">
-                Secured by Firebase Authentication & Dealership Access Control
-              </p>
-              
-              {/* Firebase Status Badge */}
-              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Firebase Project: <strong className="font-mono">{firebaseConfig.projectId || 'brosmotor-6a8fc'}</strong></span>
-              </div>
-            </div>
-
-            {alreadyLoggedIn ? (
-              <div className="bg-green-50 border border-green-200 p-4 rounded text-center text-xs space-y-3">
-                <div className="flex items-center justify-center gap-1.5 text-green-700 font-bold text-sm">
-                  <ShieldCheck size={18} /> You are signed in
-                </div>
-                <p className="text-gray-600">
-                  Signed in as <strong className="text-gray-800">{currentUser?.email || 'Administrator'}</strong>
-                </p>
-                <div className="flex gap-2 justify-center pt-1">
-                  <Link
-                    href="/admin"
-                    className="bg-[#1c459c] hover:bg-blue-900 text-white font-bold px-4 py-2 rounded text-xs inline-flex items-center gap-1 shadow-sm"
-                  >
-                    Enter Stock Manager <ArrowRight size={13} />
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleLogoutExisting}
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-3 py-2 rounded text-xs inline-flex items-center gap-1"
-                  >
-                    <LogOut size={13} /> Sign Out
-                  </button>
-                </div>
-              </div>
-            ) : isSuccess ? (
-              <div className="bg-green-50 border border-green-200 text-green-800 p-5 rounded text-center text-xs space-y-2">
-                <ShieldCheck size={28} className="mx-auto text-green-600" />
-                <p className="font-bold text-sm">Authentication Successful!</p>
-                <p className="text-gray-600">Opening vehicle stock manager...</p>
-                <div className="flex justify-center pt-2">
-                  <Loader2 className="animate-spin text-green-700" size={18} />
-                </div>
-              </div>
-            ) : (
-              <div>
-                {error && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-xs flex items-start gap-2">
-                    <AlertCircle size={15} className="flex-shrink-0 mt-0.5 text-red-600" />
-                    <div className="flex-1">
-                      <span className="font-semibold block mb-0.5">Authentication Failed</span>
-                      <span>{error}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Email and Password Form */}
-                <form onSubmit={handleEmailSubmit} className="space-y-3.5 text-xs">
-                  <div>
-                    <label className="block text-gray-700 font-semibold mb-1">
-                      Administrator Email
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="e.g. admin@3brosmotor.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={isLoading}
-                      className="w-full border border-gray-300 rounded p-2 text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 disabled:bg-gray-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-700 font-semibold mb-1">
-                      Password
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={isLoading}
-                      className="w-full border border-gray-300 rounded p-2 text-xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 disabled:bg-gray-50"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-[#1c459c] hover:bg-blue-900 disabled:bg-blue-300 text-white font-bold py-2.5 rounded uppercase tracking-wider text-xs shadow transition flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 size={14} className="animate-spin" /> Verifying Credentials...
-                      </>
-                    ) : (
-                      <>
-                        <Lock size={14} /> Sign In
-                      </>
-                    )}
-                  </button>
-                </form>
-
-                {/* Divider */}
-                <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200"></div>
-                  </div>
-                  <div className="relative flex justify-center text-xs">
-                    <span className="px-2 bg-white text-gray-500 font-medium">Or continue with</span>
-                  </div>
-                </div>
-
-                {/* Google Sign-in */}
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  disabled={isLoading}
-                  className="w-full border border-gray-300 hover:bg-gray-50 disabled:bg-gray-100 text-gray-700 font-medium py-2 rounded text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-sm"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span>Sign In with Google</span>
-                </button>
-
-                <div className="text-center pt-4">
-                  <Link href="/" className="text-blue-600 hover:underline text-xs">
-                    &larr; Return to public vehicle inventory
-                  </Link>
-                </div>
-              </div>
-            )}
-
-          </div>
-
-          {/* Step-by-Step Guide Accordion for User/Manager */}
-          <div className="w-full max-w-md mt-5">
-            <button
-              type="button"
-              onClick={() => setShowFirebaseGuide(!showFirebaseGuide)}
-              className="w-full bg-white border border-gray-200 hover:bg-gray-50 rounded p-3 text-xs flex items-center justify-between text-gray-700 font-semibold shadow-sm transition"
-            >
-              <span className="flex items-center gap-1.5 text-blue-800">
-                <HelpCircle size={15} /> Firebase Auth Setup Instructions (Step-by-Step)
-              </span>
-              {showFirebaseGuide ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-            </button>
-
-            {showFirebaseGuide && (
-              <div className="bg-white border-x border-b border-gray-200 rounded-b p-4 text-xs space-y-3.5 shadow-sm text-gray-700">
-                <p className="text-gray-600">
-                  Follow these 3 quick steps in your Firebase Console to activate your admin account:
-                </p>
-
-                <div className="space-y-3">
-                  <div className="flex gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">1</span>
-                    <div>
-                      <strong className="text-gray-900 block">Enable Sign-in Provider</strong>
-                      <p className="text-gray-600 text-[11px] mt-0.5">
-                        Open <a href={`https://console.firebase.google.com/project/${firebaseConfig.projectId || 'brosmotor-6a8fc'}/authentication/providers`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline inline-flex items-center gap-0.5">
-                          Firebase Console &gt; Authentication &gt; Sign-in method <ExternalLink size={10} />
-                        </a>. Click <strong>Email/Password</strong> and toggle <strong>Enable</strong> (and optionally <strong>Google</strong> provider).
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">2</span>
-                    <div>
-                      <strong className="text-gray-900 block">Create Admin User Account</strong>
-                      <p className="text-gray-600 text-[11px] mt-0.5">
-                        Go to the <strong>Users</strong> tab in Firebase Authentication, click <strong>Add user</strong>, and enter your email (e.g. <code>admin@3brosmotor.com</code> or your personal email) and a secure password.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">3</span>
-                    <div>
-                      <strong className="text-gray-900 block">Sign In Above</strong>
-                      <p className="text-gray-600 text-[11px] mt-0.5">
-                        Enter that email and password in the login form above. Once authenticated, your secure session is saved and you will be directed straight to the Dealership Stock Manager.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-2.5 bg-blue-50 rounded border border-blue-200 text-blue-900 text-[11px]">
-                  <strong>Security Note:</strong> Only accounts registered in Firebase Authentication have access to this dealership management portal.
-                </div>
-              </div>
-            )}
-          </div>
-
-        </div>
+        {/* Dynamic Body Content */}
+        <main className="p-3 sm:p-5 lg:p-7 flex-1">
+          {renderMainContent()}
+        </main>
       </div>
-
-      <footer className="bg-[#191d24] text-gray-400 py-3 text-xs text-center border-t border-gray-800">
-        &copy; {new Date().getFullYear()} 3BrosMotor .LTD. Dealership Internal System.
-      </footer>
     </div>
   );
 }
