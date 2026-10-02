@@ -185,6 +185,7 @@ export default function MultiPhotoUpload({
                 fill
                 className="object-cover"
                 referrerPolicy="no-referrer"
+                unoptimized={typeof url === 'string' && (url.startsWith('data:') || url.startsWith('blob:'))}
               />
 
               {/* Cover Badge */}

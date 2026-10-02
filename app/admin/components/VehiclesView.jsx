@@ -193,6 +193,7 @@ export default function VehiclesView({
                     fill
                     className="object-cover"
                     referrerPolicy="no-referrer"
+                    unoptimized={typeof car.photo === 'string' && (car.photo.startsWith('data:') || car.photo.startsWith('blob:'))}
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[9px] font-mono text-center py-0.5">
                     #{idx + 1}
@@ -324,6 +325,7 @@ export default function VehiclesView({
                             fill
                             className="object-cover"
                             referrerPolicy="no-referrer"
+                            unoptimized={typeof car.photo === 'string' && (car.photo.startsWith('data:') || car.photo.startsWith('blob:'))}
                           />
                         </div>
                         <div>

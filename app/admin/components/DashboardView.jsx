@@ -59,7 +59,7 @@ export default function DashboardView({
           </div>
 
           <div className="overflow-x-auto -mx-3.5 sm:mx-0 px-3.5 sm:px-0">
-            <table className="w-full text-left text-xs min-w-135">
+            <table className="w-full text-left text-xs min-w-[540px]">
               <thead>
                 <tr className="bg-gray-50 text-gray-500 uppercase font-bold text-[10px] tracking-wider border-b border-gray-200">
                   <th className="py-2.5 px-3">Vehicle</th>
@@ -71,16 +71,32 @@ export default function DashboardView({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 font-medium">
-                {latestArrivals.map((car) => (
+                {latestArrivals.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-gray-500 text-xs">
+                      No vehicles in inventory yet. Click{' '}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('add-vehicle')}
+                        className="text-blue-600 font-bold underline cursor-pointer hover:text-blue-800"
+                      >
+                        Add Vehicle
+                      </button>{' '}
+                      to log your first car into stock!
+                    </td>
+                  </tr>
+                ) : (
+                  latestArrivals.map((car) => (
                   <tr key={car.id} className="hover:bg-gray-50/80 transition">
                     <td className="py-2.5 px-3 flex items-center gap-2.5">
-                      <div className="w-10 h-7 rounded overflow-hidden relative bg-gray-100 shrink-0 border border-gray-200">
+                      <div className="w-10 h-7 rounded overflow-hidden relative bg-gray-100 flex-shrink-0 border border-gray-200">
                         <Image 
                           src={car.photo} 
                           alt={car.model} 
                           fill 
                           className="object-cover" 
                           referrerPolicy="no-referrer"
+                          unoptimized={typeof car.photo === 'string' && (car.photo.startsWith('data:') || car.photo.startsWith('blob:'))}
                         />
                       </div>
                       <div>
@@ -121,7 +137,8 @@ export default function DashboardView({
                       </button>
                     </td>
                   </tr>
-                ))}
+                ))
+              )}
               </tbody>
             </table>
           </div>
@@ -184,8 +201,8 @@ export default function DashboardView({
                 <strong className="text-amber-400">{inTransitCount} {inTransitCount === 1 ? 'Unit' : 'Units'}</strong>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-gray-700">
-                <span>🇯🇵 Japan USS Auction Pipeline:</span>
-                <strong className="text-emerald-400">3 Pending</strong>
+                <span>🚗 Real Tracked Inventory:</span>
+                <strong className="text-emerald-400">{cars.length} {cars.length === 1 ? 'Unit' : 'Units'}</strong>
               </div>
             </div>
           </div>

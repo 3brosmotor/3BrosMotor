@@ -85,6 +85,7 @@ export default function VehiclesManagementView({ cars = [], onUpdateCar }) {
                   fill
                   className="object-cover"
                   referrerPolicy="no-referrer"
+                  unoptimized={typeof car.photo === 'string' && (car.photo.startsWith('data:') || car.photo.startsWith('blob:'))}
                 />
               </div>
               <div className="flex-1 min-w-0">

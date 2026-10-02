@@ -106,6 +106,7 @@ export default function SettingsView({ subTab = 'settings-makes' }) {
                     fill
                     className="object-cover"
                     referrerPolicy="no-referrer"
+                    unoptimized={typeof settings.adminAvatar === 'string' && (settings.adminAvatar.startsWith('data:') || settings.adminAvatar.startsWith('blob:'))}
                   />
                 ) : (
                   <span className="flex items-center justify-center h-full text-xs font-bold text-gray-500">HR</span>

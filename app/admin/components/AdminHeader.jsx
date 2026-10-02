@@ -198,6 +198,7 @@ export default function AdminHeader({
                     fill
                     className="object-cover"
                     referrerPolicy="no-referrer"
+                    unoptimized={typeof currentPhoto === 'string' && (currentPhoto.startsWith('data:') || currentPhoto.startsWith('blob:'))}
                     onError={() => setImageError(true)}
                   />
                 ) : (
@@ -282,6 +283,7 @@ export default function AdminHeader({
                     fill
                     className="object-cover"
                     referrerPolicy="no-referrer"
+                    unoptimized={typeof currentPhoto === 'string' && (currentPhoto.startsWith('data:') || currentPhoto.startsWith('blob:'))}
                     onError={() => setImageError(true)}
                   />
                 ) : (
