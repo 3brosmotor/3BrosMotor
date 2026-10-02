@@ -1,4 +1,4 @@
-// Admin Authentication & Session Management for 3BrosMotor 
+// Admin Authentication & Session Management for 3BrosMotor Dealership
 import { auth, googleProvider } from './firebase';
 import { 
   signInWithEmailAndPassword, 
@@ -6,12 +6,6 @@ import {
   signOut as fbSignOut, 
   onAuthStateChanged 
 } from 'firebase/auth';
-
-export const DEMO_ADMIN_CREDENTIALS = {
-  username: 'admin',
-  email: 'admin@3brosmotor.com',
-  password: 'admin123'
-};
 
 export const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 Hours Security Session
 const STORAGE_KEY = '3bros_admin_session_auth';
@@ -53,65 +47,43 @@ export function getRemainingSessionHours() {
 }
 
 /**
- * Friendly error messages for Firebase Authentication error codes
+ * Friendly error messages for Authentication error codes (neutral & secure)
  */
 export function getFirebaseErrorMessage(errorCode) {
   switch (errorCode) {
     case 'auth/invalid-credential':
     case 'auth/wrong-password':
-      return 'Invalid credentials. Please verify your email and password.';
     case 'auth/user-not-found':
-      return 'No administrator account found with this email in Firebase.';
+      return 'Invalid credentials.';
     case 'auth/invalid-email':
-      return 'The email address is improperly formatted.';
+      return 'Invalid email address.';
     case 'auth/user-disabled':
-      return 'This administrator account has been disabled in Firebase Console.';
+      return 'This account has been disabled. Please contact support.';
     case 'auth/too-many-requests':
-      return 'Access temporarily blocked due to many failed login attempts. Please try again later or reset password.';
-    case 'auth/operation-not-allowed':
-      return 'Email/Password sign-in is not enabled in Firebase Console. Go to Firebase Console > Authentication > Sign-in method to enable it.';
-    case 'auth/popup-closed-by-user':
-      return 'Google Sign-In popup was closed before completing login.';
-    case 'auth/popup-blocked':
-      return 'Google Sign-In popup was blocked by browser. Please allow popups for this site.';
-    case 'auth/unauthorized-domain':
-      return 'This domain is not authorized in Firebase Console under Authentication > Settings > Authorized domains.';
+      return 'Too many failed attempts. Please try again in a few minutes.';
+    case 'auth/network-request-failed':
+      return 'Network connection error. Please check your internet connection.';
     default:
-      return null;
+      return 'Invalid credentials.';
   }
 }
 
 /**
- * Check if the admin is currently authenticated with a valid (unexpired) 24-hour session
+ * Check if the admin is currently authenticated in Firebase
  */
 export function isUserAuthenticated() {
   if (typeof window === 'undefined') return false;
+  if (auth && auth.currentUser) return true;
   try {
     const session = localStorage.getItem(STORAGE_KEY);
-    if (session !== 'true') return false;
-
-    // Verify 24-hour session expiration
-    const expiryStr = localStorage.getItem(SESSION_EXPIRY_KEY);
-    if (expiryStr) {
-      const expiresAt = parseInt(expiryStr, 10);
-      if (Number.isNaN(expiresAt) || Date.now() >= expiresAt) {
-        // 24-hour session expired: clear credentials and require re-authentication
-        logoutAdmin();
-        return false;
-      }
-    } else {
-      // First session: initialize 24-hour timer from now
-      localStorage.setItem(SESSION_EXPIRY_KEY, String(Date.now() + SESSION_DURATION_MS));
-    }
-
-    return true;
+    return session === 'true';
   } catch {
     return false;
   }
 }
 
 /**
- * Get current admin user info
+ * Get current admin user info from Firebase
  */
 export function getAdminUser() {
   if (auth && auth.currentUser) {
@@ -132,48 +104,45 @@ export function getAdminUser() {
     }
   }
   return {
-    email: 'admin@3brosmotor.com',
+    email: '3brosmotor@gmail.com',
     displayName: 'Dealership Admin',
-    provider: 'local'
+    provider: 'firebase'
   };
 }
 
 /**
- * Authenticate with Firebase Email & Password
+ * Authenticate strictly with Firebase Email & Password
  */
 export async function authenticateWithFirebaseEmail(email, password) {
   if (!email || !password) {
     return { success: false, error: 'Please enter both email and password.' };
   }
 
-  // If Firebase is available, authenticate against Firebase Auth
-  if (auth) {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      const user = userCredential.user;
-
-      if (typeof window !== 'undefined') {
-        setAdminSession({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName || user.email?.split('@')[0] || 'Administrator',
-          photoURL: user.photoURL,
-          provider: 'firebase-email'
-        });
-      }
-
-      return { success: true, user };
-    } catch (err) {
-      const friendly = getFirebaseErrorMessage(err?.code);
-      return { 
-        success: false, 
-        error: friendly || (err?.message ? `Firebase Auth error: ${err.message}` : 'Login failed')
-      };
-    }
+  if (!auth) {
+    return { success: false, error: 'Firebase is not initialized. Please verify your Firebase configuration.' };
   }
 
-  // Local demo fallback if Firebase Auth instance is not initialized
-  return authenticateAdmin(email, password);
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+    const user = userCredential.user;
+
+    const adminInfo = {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName || user.email?.split('@')[0] || 'Administrator',
+      photoURL: user.photoURL,
+      provider: 'firebase-email'
+    };
+
+    setAdminSession(adminInfo);
+    return { success: true, user: adminInfo };
+  } catch (err) {
+    const friendly = getFirebaseErrorMessage(err?.code);
+    return { 
+      success: false, 
+      error: friendly || 'Invalid credentials.'
+    };
+  }
 }
 
 /**
@@ -188,17 +157,16 @@ export async function authenticateWithFirebaseGoogle() {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
 
-    if (typeof window !== 'undefined') {
-      setAdminSession({
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName || 'Administrator',
-        photoURL: user.photoURL,
-        provider: 'google'
-      });
-    }
+    const adminInfo = {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName || 'Administrator',
+      photoURL: user.photoURL,
+      provider: 'google'
+    };
 
-    return { success: true, user };
+    setAdminSession(adminInfo);
+    return { success: true, user: adminInfo };
   } catch (err) {
     const friendly = getFirebaseErrorMessage(err?.code);
     return { 
@@ -209,38 +177,11 @@ export async function authenticateWithFirebaseGoogle() {
 }
 
 /**
- * Local credential authenticate (demo / fallback)
- */
-export function authenticateAdmin(userOrEmail, password) {
-  if (!userOrEmail || !password) return { success: false, error: 'Please enter both username and password.' };
-  
-  const cleanInput = userOrEmail.trim().toLowerCase();
-  const validUser = cleanInput === DEMO_ADMIN_CREDENTIALS.username || cleanInput === DEMO_ADMIN_CREDENTIALS.email;
-  const validPass = password === DEMO_ADMIN_CREDENTIALS.password;
-
-  if (validUser && validPass) {
-    if (typeof window !== 'undefined') {
-      setAdminSession({
-        email: DEMO_ADMIN_CREDENTIALS.email,
-        displayName: 'Demo Administrator',
-        provider: 'demo'
-      });
-    }
-    return { success: true };
-  }
-
-  return { 
-    success: false, 
-    error: 'Invalid username or password.' 
-  };
-}
-
-/**
- * Log out administrator and clear Firebase & local session
+ * Log out administrator and clear Firebase session
  */
 export async function logoutAdmin() {
   try {
-    if (auth && auth.currentUser) {
+    if (auth) {
       await fbSignOut(auth);
     }
   } catch (e) {
@@ -256,40 +197,31 @@ export async function logoutAdmin() {
 }
 
 /**
- * Subscribe to auth state changes from Firebase
+ * Subscribe directly to Firebase Auth state changes (Single Source of Truth)
  */
 export function subscribeToAuthChanges(callback) {
   if (!auth) {
-    // If no Firebase auth, just report current local state
-    callback(isUserAuthenticated() ? getAdminUser() : null);
+    callback(null);
     return () => {};
   }
 
   return onAuthStateChanged(auth, (user) => {
     if (user) {
-      // Validate 24-hour expiration
-      if (!isUserAuthenticated()) {
-        logoutAdmin();
-        callback(null);
-        return;
-      }
-      if (typeof window !== 'undefined' && !localStorage.getItem(SESSION_EXPIRY_KEY)) {
-        setAdminSession({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName || user.email?.split('@')[0] || 'Administrator',
-          photoURL: user.photoURL,
-          provider: user.providerData?.[0]?.providerId || 'firebase'
-        });
-      }
-      callback({
+      const adminInfo = {
         uid: user.uid,
         email: user.email,
         displayName: user.displayName || user.email?.split('@')[0] || 'Administrator',
         photoURL: user.photoURL,
         provider: user.providerData?.[0]?.providerId || 'firebase'
-      });
+      };
+      setAdminSession(adminInfo);
+      callback(adminInfo);
     } else {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(SESSION_EXPIRY_KEY);
+        localStorage.removeItem(USER_INFO_KEY);
+      }
       callback(null);
     }
   });

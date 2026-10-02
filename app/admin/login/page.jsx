@@ -5,16 +5,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Logo from '../../components/Logo';
 import { 
-  DEMO_ADMIN_CREDENTIALS, 
   authenticateWithFirebaseEmail, 
   authenticateWithFirebaseGoogle, 
-  authenticateAdmin,
   isUserAuthenticated, 
   logoutAdmin,
-  isFirebaseConfigured,
   getAdminUser
 } from '../../lib/auth';
-import { firebaseConfig } from '../../../lib/firebase';
+import { firebaseConfig } from '../../lib/firebase';
 import { 
   Lock, 
   ShieldCheck, 
@@ -22,12 +19,8 @@ import {
   Key, 
   ArrowRight, 
   LogOut, 
-  HelpCircle, 
   Check, 
-  Loader2,
-  ExternalLink,
-  ChevronDown,
-  ChevronUp
+  Loader2
 } from 'lucide-react';
 import { PRIMARY_PHONE, SECONDARY_PHONE } from '../../lib/contactConfig';
 
@@ -40,22 +33,13 @@ export default function AdminLogin() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [alreadyLoggedIn, setAlreadyLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [showFirebaseGuide, setShowFirebaseGuide] = useState(false);
-  const [firebaseActive, setFirebaseActive] = useState(false);
 
   useEffect(() => {
-    setFirebaseActive(isFirebaseConfigured());
     if (isUserAuthenticated()) {
       setAlreadyLoggedIn(true);
       setCurrentUser(getAdminUser());
     }
   }, []);
-
-  const handleFillDemo = () => {
-    setEmail(DEMO_ADMIN_CREDENTIALS.email);
-    setPassword(DEMO_ADMIN_CREDENTIALS.password);
-    setError('');
-  };
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -162,14 +146,8 @@ export default function AdminLogin() {
               </div>
               <h2 className="text-xl font-bold text-gray-900 tracking-tight">3BrosMotor .LTD</h2>
               <p className="text-xs text-gray-500 mt-1">
-                Secured by Firebase Authentication & Dealership Access Control
+                Authorized Dealership Management Portal
               </p>
-              
-              {/* Firebase Status Badge */}
-              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Firebase Project: <strong className="font-mono">{firebaseConfig.projectId || 'brosmotor-6a8fc'}</strong></span>
-              </div>
             </div>
 
             {alreadyLoggedIn ? (
@@ -226,7 +204,7 @@ export default function AdminLogin() {
                     <input
                       type="email"
                       required
-                      placeholder="e.g. admin@3brosmotor.com"
+                      placeholder="abc@gmail.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={isLoading}
@@ -312,66 +290,6 @@ export default function AdminLogin() {
               </div>
             )}
 
-          </div>
-
-          {/* Step-by-Step Guide Accordion for User/Manager */}
-          <div className="w-full max-w-md mt-5">
-            <button
-              type="button"
-              onClick={() => setShowFirebaseGuide(!showFirebaseGuide)}
-              className="w-full bg-white border border-gray-200 hover:bg-gray-50 rounded p-3 text-xs flex items-center justify-between text-gray-700 font-semibold shadow-sm transition"
-            >
-              <span className="flex items-center gap-1.5 text-blue-800">
-                <HelpCircle size={15} /> Firebase Auth Setup Instructions (Step-by-Step)
-              </span>
-              {showFirebaseGuide ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-            </button>
-
-            {showFirebaseGuide && (
-              <div className="bg-white border-x border-b border-gray-200 rounded-b p-4 text-xs space-y-3.5 shadow-sm text-gray-700">
-                <p className="text-gray-600">
-                  Follow these 3 quick steps in your Firebase Console to activate your admin account:
-                </p>
-
-                <div className="space-y-3">
-                  <div className="flex gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">1</span>
-                    <div>
-                      <strong className="text-gray-900 block">Enable Sign-in Provider</strong>
-                      <p className="text-gray-600 text-[11px] mt-0.5">
-                        Open <a href={`https://console.firebase.google.com/project/${firebaseConfig.projectId || 'brosmotor-6a8fc'}/authentication/providers`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline inline-flex items-center gap-0.5">
-                          Firebase Console &gt; Authentication &gt; Sign-in method <ExternalLink size={10} />
-                        </a>. Click <strong>Email/Password</strong> and toggle <strong>Enable</strong> (and optionally <strong>Google</strong> provider).
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">2</span>
-                    <div>
-                      <strong className="text-gray-900 block">Create Admin User Account</strong>
-                      <p className="text-gray-600 text-[11px] mt-0.5">
-                        Go to the <strong>Users</strong> tab in Firebase Authentication, click <strong>Add user</strong>, and enter your email (e.g. <code>admin@3brosmotor.com</code> or your personal email) and a secure password.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">3</span>
-                    <div>
-                      <strong className="text-gray-900 block">Sign In Above</strong>
-                      <p className="text-gray-600 text-[11px] mt-0.5">
-                        Enter that email and password in the login form above. Once authenticated, your secure session is saved and you will be directed straight to the Dealership Stock Manager.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-2.5 bg-blue-50 rounded border border-blue-200 text-blue-900 text-[11px]">
-                  <strong>Security Note:</strong> Only accounts registered in Firebase Authentication have access to this dealership management portal.
-                </div>
-              </div>
-            )}
           </div>
 
         </div>

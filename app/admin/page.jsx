@@ -52,13 +52,11 @@ import {
 
 import { 
   isUserAuthenticated, 
-  authenticateAdmin, 
   authenticateWithFirebaseEmail, 
   authenticateWithFirebaseGoogle,
   logoutAdmin, 
   subscribeToAuthChanges,
-  getAdminUser,
-  DEMO_ADMIN_CREDENTIALS 
+  getAdminUser
 } from '../lib/auth';
 import { ShieldCheck, LogIn, Lock, CheckCircle2, Car } from 'lucide-react';
 
@@ -81,10 +79,11 @@ export default function AdminPage() {
   const [notes, setNotes] = useState([]);
   const [adminSettings, setAdminSettings] = useState(() => getDealershipSettings());
 
-  // Login form state (if unauthenticated fallback)
-  const [loginUsername, setLoginUsername] = useState('admin');
-  const [loginPassword, setLoginPassword] = useState('admin123');
+  // Login form state
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Load all admin data
   const refreshAllData = () => {
@@ -98,30 +97,9 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    // Check initial authentication with 24-hour expiry enforcement
-    const authStatus = isUserAuthenticated();
-    if (authStatus) {
-      setIsAuthenticated(true);
-      initCarStoreSync();
-      initAdminStoreSync();
-      refreshAllData();
-    } else {
-      setIsAuthenticated(false);
-    }
-
-    // Periodic 24-hour session validation (checks every 30 seconds & whenever browser tab regains focus)
-    const validateSession = () => {
-      if (!isUserAuthenticated()) {
-        setIsAuthenticated(false);
-      }
-    };
-
-    const sessionTimer = setInterval(validateSession, 30000);
-    window.addEventListener('focus', validateSession);
-
-    // Subscribe to real-time Firebase Auth state updates
+    // Pure Firebase Auth state listener as single source of truth
     const unsubscribeAuth = subscribeToAuthChanges((user) => {
-      if (user && isUserAuthenticated()) {
+      if (user) {
         setIsAuthenticated(true);
         initCarStoreSync();
         initAdminStoreSync();
@@ -129,9 +107,8 @@ export default function AdminPage() {
       } else {
         setIsAuthenticated(false);
       }
+      setIsCheckingAuth(false);
     });
-
-    setIsCheckingAuth(false);
 
     // Listen to inventory and admin store updates
     const handleInvUpdate = () => setCars(getStoredCars());
@@ -148,8 +125,6 @@ export default function AdminPage() {
     window.addEventListener(ADMIN_EVENT, handleAdminUpdate);
 
     return () => {
-      clearInterval(sessionTimer);
-      window.removeEventListener('focus', validateSession);
       if (typeof unsubscribeAuth === 'function') unsubscribeAuth();
       window.removeEventListener(INVENTORY_EVENT, handleInvUpdate);
       window.removeEventListener(ADMIN_EVENT, handleAdminUpdate);
@@ -258,12 +233,21 @@ export default function AdminPage() {
   const handleManualLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
-    const res = await authenticateWithFirebaseEmail(loginUsername, loginPassword);
-    if (res.success) {
-      setIsAuthenticated(true);
-      refreshAllData();
-    } else {
-      setLoginError(res.error || 'Authentication failed');
+    setIsLoggingIn(true);
+    try {
+      const res = await authenticateWithFirebaseEmail(loginUsername, loginPassword);
+      if (res.success) {
+        setIsAuthenticated(true);
+        initCarStoreSync();
+        initAdminStoreSync();
+        refreshAllData();
+      } else {
+        setLoginError(res.error || 'Authentication failed');
+      }
+    } catch (err) {
+      setLoginError(err?.message || 'Login failed');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -304,10 +288,12 @@ export default function AdminPage() {
               <input
                 type="email"
                 required
+                disabled={isLoggingIn}
                 value={loginUsername}
                 onChange={(e) => setLoginUsername(e.target.value)}
                 className="w-full border border-gray-300 p-2.5 rounded-lg outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-                placeholder="admin@3brosmotor.com"
+                placeholder="abc@gmail.com"
+                autoComplete="email"
               />
             </div>
 
@@ -315,19 +301,33 @@ export default function AdminPage() {
               <label className="block font-bold text-gray-700 mb-1">Password</label>
               <input
                 type="password"
+                required
+                disabled={isLoggingIn}
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full border border-gray-300 p-2.5 rounded-lg"
+                className="w-full border border-gray-300 p-2.5 rounded-lg outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                 placeholder="••••••••"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full bg-[#111827] hover:bg-black text-white font-bold py-3 rounded-lg text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+              disabled={isLoggingIn}
+              className={`w-full bg-[#111827] hover:bg-black text-white font-bold py-3 rounded-lg text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-sm ${
+                isLoggingIn ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
             >
-              <LogIn size={16} />
-              <span>Sign In</span>
+              {isLoggingIn ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <>
+                  <LogIn size={16} />
+                  <span>Sign In</span>
+                </>
+              )}
             </button>
           </form>
         </div>
