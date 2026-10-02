@@ -9,37 +9,48 @@ service cloud.firestore {
 
     // Public read for vehicles so customers anywhere in the world can browse stock
     match /vehicles/{vehicleId} {
-      allow read: if isValidId(vehicleId);
+      allow read: if true;
       allow write: if isValidId(vehicleId);
     }
 
     // Public read for dealership settings & director profile photo
     match /dealership_settings/{docId} {
-      allow read: if isValidId(docId);
+      allow read: if true;
       allow write: if isValidId(docId);
     }
 
     // Expenses ledger
     match /expenses/{expenseId} {
-      allow read, write: if isValidId(expenseId);
+      allow read: if true;
+      allow write: if isValidId(expenseId);
     }
 
     // Sales ledger
     match /sales/{saleId} {
-      allow read, write: if isValidId(saleId);
+      allow read: if true;
+      allow write: if isValidId(saleId);
     }
 
     // Calendar events, reminders, notes
     match /calendar_events/{eventId} {
-      allow read, write: if isValidId(eventId);
+      allow read: if true;
+      allow write: if isValidId(eventId);
     }
 
     match /reminders/{reminderId} {
-      allow read, write: if isValidId(reminderId);
+      allow read: if true;
+      allow write: if isValidId(reminderId);
     }
 
     match /notes/{noteId} {
-      allow read, write: if isValidId(noteId);
+      allow read: if true;
+      allow write: if isValidId(noteId);
+    }
+
+    // Vehicle import documents & customs records (internal dealership records)
+    match /documents/{documentId} {
+      allow read: if true;
+      allow write: if isValidId(documentId);
     }
 
     // Default catch-all

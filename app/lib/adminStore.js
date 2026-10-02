@@ -1,5 +1,5 @@
 // 3BrosMotor Dealership Admin Data Store
-// Manages Expenses, Sales, Calendar Events, Reminders, Notes, and Setting with Firebase Firestore Cloud Sync
+// Manages Expenses, Sales, Calendar Events, Reminders, Notes, and Settings with Firebase Firestore Cloud Sync
 
 import { db, handleFirestoreError, OperationType } from './firebase';
 import { doc, getDoc, setDoc, deleteDoc, onSnapshot, collection } from 'firebase/firestore';
@@ -10,6 +10,7 @@ const CALENDAR_STORAGE_KEY = '3bros_admin_calendar';
 const REMINDERS_STORAGE_KEY = '3bros_admin_reminders';
 const NOTES_STORAGE_KEY = '3bros_admin_notes';
 const SETTINGS_STORAGE_KEY = '3bros_admin_settings';
+const DOCUMENTS_STORAGE_KEY = '3bros_admin_documents';
 
 export const ADMIN_EVENT = '3bros_admin_state_updated';
 
@@ -128,6 +129,23 @@ export function initAdminStoreSync() {
         handleFirestoreError(err, OperationType.GET, 'dealership_settings/main');
       }
     });
+
+    // Real-time synchronization for vehicle import & legal documents
+    try {
+      const docsCollectionRef = collection(db, 'documents');
+      onSnapshot(docsCollectionRef, (snap) => {
+        if (!snap.empty) {
+          const remoteDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          const cleanDocs = remoteDocs.filter(d => !['doc-1', 'doc-2', 'doc-3', 'doc-4', 'doc-5'].includes(d.id));
+          localStorage.setItem(DOCUMENTS_STORAGE_KEY, JSON.stringify(cleanDocs));
+          triggerEvent();
+        }
+      }, () => {
+        // Soft fail if offline
+      });
+    } catch {
+      // Ignored if offline
+    }
   } catch (err) {
     const msg = err?.message || '';
     const code = err?.code || '';
@@ -426,3 +444,67 @@ export async function saveDealershipSettings(settings) {
 
   return clean;
 }
+
+// Documents Helpers (Vehicle Import & Legal Documents)
+export function getDocuments() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(DOCUMENTS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    // Ensure all legacy mock/dummy documents are filtered out
+    const cleaned = parsed.filter(item => !['doc-1', 'doc-2', 'doc-3', 'doc-4', 'doc-5'].includes(item.id));
+    if (cleaned.length !== parsed.length) {
+      localStorage.setItem(DOCUMENTS_STORAGE_KEY, JSON.stringify(cleaned));
+    }
+    return cleaned;
+  } catch {
+    return [];
+  }
+}
+
+export function addDocument(docItem) {
+  if (typeof window === 'undefined') return;
+  const current = getDocuments();
+  const newDoc = { 
+    ...docItem, 
+    id: docItem.id || `doc-${Date.now()}`,
+    createdAt: docItem.createdAt || new Date().toISOString()
+  };
+  const updated = [newDoc, ...current];
+  localStorage.setItem(DOCUMENTS_STORAGE_KEY, JSON.stringify(updated));
+  triggerEvent();
+
+  if (db) {
+    const firestorePayload = { ...newDoc };
+    // Guard against Firestore 1MB document limit for large base64 attachments
+    if (firestorePayload.fileData && firestorePayload.fileData.length > 750000) {
+      delete firestorePayload.fileData;
+      firestorePayload.hasLargeAttachment = true;
+    }
+
+    setDoc(doc(db, 'documents', newDoc.id), firestorePayload, { merge: true }).catch(err => {
+      handleFirestoreError(err, OperationType.WRITE, `documents/${newDoc.id}`);
+    });
+  }
+
+  return updated;
+}
+
+export function deleteDocument(id) {
+  if (typeof window === 'undefined') return;
+  const current = getDocuments();
+  const updated = current.filter(d => d.id !== id);
+  localStorage.setItem(DOCUMENTS_STORAGE_KEY, JSON.stringify(updated));
+  triggerEvent();
+
+  if (db) {
+    deleteDoc(doc(db, 'documents', id)).catch(err => {
+      handleFirestoreError(err, OperationType.DELETE, `documents/${id}`);
+    });
+  }
+
+  return updated;
+}
+

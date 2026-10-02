@@ -424,7 +424,7 @@ export default function AdminPage() {
         );
 
       case 'documents':
-        return <DocumentsView />;
+        return <DocumentsView cars={cars} />;
 
       case 'settings':
       case 'settings-makes':
